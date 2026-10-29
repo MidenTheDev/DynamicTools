@@ -1,0 +1,6 @@
+name: DynamicTools
+version: '${version}'
+
+main: us.to.midensthings.dynamicTools.DynamicTools
+api-version: '26.3'
+load: POSTWORLD
