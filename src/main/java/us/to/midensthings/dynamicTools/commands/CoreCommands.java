@@ -107,12 +107,12 @@ public class CoreCommands {
         ItemManager.addOrDropItem(tool.getItemStack(),p);
         if (sender instanceof Player senderPlayer) {
             if (senderPlayer == p) {
-                sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Gave you a "+ primaryMaterial.getDisplayName() +" "+toolType.getDisplayName()));
+                sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Gave you a "+ tool.generateDisplayNameString()));
                 return Command.SINGLE_SUCCESS;
             }
         }
 
-        sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Gave player "+p.getName()+" a "+ primaryMaterial.getDisplayName() +" "+toolType.getDisplayName()));
+        sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Gave player "+p.getName()+" a "+ tool.generateDisplayNameString()));
 
         return Command.SINGLE_SUCCESS;
     }

@@ -2,9 +2,8 @@ package us.to.midensthings.dynamicTools.tools;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
-import io.papermc.paper.datacomponent.item.KineticWeapon;
-import io.papermc.paper.datacomponent.item.PiercingWeapon;
-import io.papermc.paper.datacomponent.item.Weapon;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
@@ -106,10 +105,14 @@ public class Tool {
                 .build();
         item.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, mods);
 
+        // Set ItemMeta values for the item:
+        ItemMeta meta = item.getItemMeta();
+        meta.customName(generateDisplayNameComponent());
+        item.setItemMeta(meta);
 
-        // TODO: Other stats
 
-        // TODO: Hide attribute modifiers and replace with realistic looking item lore
+
+        // TODO: Hide attribute modifiers and replace with realistic looking item lore?
 
 
     }
@@ -133,6 +136,14 @@ public class Tool {
             return null;
         }
         return new Tool(toolType, primaryMaterial, secondaryMaterial, tertiaryMaterial);
+    }
+
+    public Component generateDisplayNameComponent() {
+        return MiniMessage.miniMessage().deserialize(generateDisplayNameString());
+    }
+
+    public String generateDisplayNameString() {
+        return headToolMaterial.getDisplayName() + " " + toolType.getDisplayName();
     }
 
     public ItemStack getItemStack() {

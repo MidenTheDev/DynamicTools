@@ -100,7 +100,7 @@ public final class DynamicTools extends JavaPlugin {
 
         materialsConf.getConfigurationSection("").getKeys(false).forEach(mat -> {
             List<PartType> validParts = new ArrayList<>();
-            if (materialsConf.getBoolean(mat+".use-part-whitelist")) {
+            if (!materialsConf.getStringList(mat+".part-whitelist").isEmpty()) {
                 List<String> validPartsStrings = materialsConf.getStringList(mat+".part-whitelist");
                 for (String partName : validPartsStrings) {
                     try {
@@ -111,15 +111,17 @@ public final class DynamicTools extends JavaPlugin {
                 }
             } else {
                 validParts = new ArrayList<>(List.of(PartType.values()));
-
-                List<String> invalidPartsStrings = materialsConf.getStringList(mat+".part-blacklist");
-                for (String partName : invalidPartsStrings) {
-                    try {
-                        validParts.remove(PartType.valueOf(partName));
-                    } catch (IllegalArgumentException e) {
-                        this.getLogger().warning("Invalid part type found in material "+mat+" called: "+partName);
+                if (!materialsConf.getStringList(mat+".part-blacklist").isEmpty()) {
+                    List<String> invalidPartsStrings = materialsConf.getStringList(mat+".part-blacklist");
+                    for (String partName : invalidPartsStrings) {
+                        try {
+                            validParts.remove(PartType.valueOf(partName));
+                        } catch (IllegalArgumentException e) {
+                            this.getLogger().warning("Invalid part type found in material "+mat+" called: "+partName);
+                        }
                     }
                 }
+
 
             }
 

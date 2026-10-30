@@ -1,14 +1,12 @@
 wood:
-  display-name: "Wooden"
+  display-name: "<#b5835a>Wooden</#b5835a>"
   materials:
-    - "#planks"
+    - "#minecraft:wooden_tool_materials"
   stats:
     durability: 60
     attackDamage: 2
     attackSpeed: 0.8
     digSpeed: 2
-    armor: 0
-    armorToughness: 0
     miningLevel: 1
   multipliers:
     durability: 1.0
@@ -17,10 +15,151 @@ wood:
     digSpeed: 1.0
     armor: 1.0
     armorToughness: 1.0
-  use-part-whitelist: false
-  use-part-blacklist: true
-  part-whitelist: []
   part-blacklist:
+    - ARMOR_CORE
+    - ARMOR_BINDING
+    - HELMET_FRAME
+    - CHESTPLATE_FRAME
+    - LEGGINGS_FRAME
+    - BOOTS_FRAME
+
+stone:
+  display-name: "<dark_gray>Stone</dark_gray>"
+  materials:
+    - "#minecraft:stone_tool_materials"
+  stats:
+    durability: 130
+    attackDamage: 2.5
+    attackSpeed: 0.8
+    digSpeed: 4
+    miningLevel: 2
+  multipliers:
+    durability: 1.0
+    attackDamage: 1.0
+    attackSpeed: 1.0
+    digSpeed: 1.0
+    armor: 1.0
+    armorToughness: 1.0
+  part-blacklist:
+    - ARMOR_CORE
+    - ARMOR_BINDING
+    - HELMET_FRAME
+    - CHESTPLATE_FRAME
+    - LEGGINGS_FRAME
+    - BOOTS_FRAME
+
+copper:
+  display-name: "<#ffa348>Copper</#ffa348>"
+  materials:
+    - "#minecraft:copper_tool_materials"
+  stats:
+    durability: 190
+    attackDamage: 2.5
+    attackSpeed: 0.8
+    digSpeed: 5
+    armor: 1
+    miningLevel: 2
+  multipliers:
+    durability: 1.0
+    attackDamage: 1.0
+    attackSpeed: 1.0
+    digSpeed: 1.0
+    armor: 1.0
+    armorToughness: 1.0
+
+
+iron:
+  display-name: "<gray>Iron</gray>"
+  materials:
+    - "#minecraft:iron_tool_materials"
+  stats:
+    durability: 250
+    attackDamage: 3
+    attackSpeed: 0.8
+    digSpeed: 6
+    armor: 2
+    armorToughness: 0.5
+    miningLevel: 3
+  multipliers:
+    durability: 1.0
+    attackDamage: 1.0
+    attackSpeed: 1.0
+    digSpeed: 1.0
+    armor: 1.0
+    armorToughness: 1.0
+
+
+gold:
+  display-name: "<#e5a00a>Golden</#e5a00a>"
+  materials:
+    - "#minecraft:gold_tool_materials"
+  stats:
+    durability: 80
+    attackDamage: 3
+    attackSpeed: 0.8
+    digSpeed: 8
+    armor: 1
+    miningLevel: 2
+  multipliers:
+    durability: 0.6
+    attackDamage: 1.0
+    attackSpeed: 1.0
+    digSpeed: 1.45
+    armor: 1.0
+    armorToughness: 1.0
+
+diamond:
+  display-name: "<#38e8dd>Diamond</#38e8dd>"
+  materials:
+    - "#minecraft:diamond_tool_materials"
+  stats:
+    durability: 1560
+    attackDamage: 3.5
+    attackSpeed: 0.8
+    digSpeed: 8
+    armor: 3
+    armorToughness: 1.0
+    miningLevel: 4
+  multipliers:
+    durability: 1.0
+    attackDamage: 1.0
+    attackSpeed: 1.0
+    digSpeed: 1.0
+    armor: 1.0
+    armorToughness: 1.0
+
+netherite:
+  display-name: "<#2F2736>Netherite</#2F2736>"
+  materials:
+    - "#minecraft:netherite_tool_materials"
+  stats:
+    durability: 1560
+    attackDamage: 4
+    attackSpeed: 0.8
+    digSpeed: 9
+    armor: 3
+    armorToughness: 2.0
+    miningLevel: 4
+  multipliers:
+    durability: 1.25
+    attackDamage: 1.0
+    attackSpeed: 1.0
+    digSpeed: 1.45
+    armor: 1.0
+    armorToughness: 1.0
+
+# For chainmail armor
+iron_chain:
+  display-name: "<gray>Chainmail</gray>"
+  materials:
+    - "minecraft:iron_chain"
+  stats:
+    armor: 1
+    armorToughness: 0
+  multipliers:
+    armor: 1.0
+    armorToughness: 1.0
+  part-whitelist:
     - ARMOR_CORE
     - ARMOR_BINDING
     - HELMET_FRAME
