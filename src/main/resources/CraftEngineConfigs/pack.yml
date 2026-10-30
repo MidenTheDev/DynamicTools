@@ -1,0 +1,4 @@
+author: DynamicTools
+version: '${version}'
+description: Items and blocks used by DynamicTools
+namespace: dynamictools

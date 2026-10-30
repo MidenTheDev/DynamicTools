@@ -1,0 +1,83 @@
+# Parts point item_model at vanilla items and have no model/texture section, so CraftEngine does not generate any textures or models for them.
+items:
+  dynamictools:binding:
+    material: paper
+    item_model: minecraft:string
+    data:
+      item_name: "Binding"
+  dynamictools:handle:
+    material: paper
+    item_model: minecraft:stick
+    data:
+      item_name: "Handle"
+
+  # Tools (handle + binding + tool head = complete piece)
+  dynamictools:pickaxe_head:
+    material: paper
+    item_model: minecraft:flint
+    data:
+      item_name: "Pickaxe Head"
+  dynamictools:axe_head:
+    material: paper
+    item_model: minecraft:flint
+    data:
+      item_name: "Axe Head"
+  dynamictools:hoe_head:
+    material: paper
+    item_model: minecraft:flint
+    data:
+      item_name: "Hoe Head"
+  dynamictools:shovel_head:
+    material: paper
+    item_model: minecraft:flint
+    data:
+      item_name: "Shovel Head"
+
+  # Weapons (handle + binding + weapon head = complete piece)
+  dynamictools:sword_blade:
+    material: paper
+    item_model: minecraft:iron_ingot
+    data:
+      item_name: "Sword Blade"
+  dynamictools:spear_head:
+    material: paper
+    item_model: minecraft:flint
+    data:
+      item_name: "Spear Head"
+  dynamictools:mace_core:
+    material: paper
+    item_model: minecraft:heavy_core
+    data:
+      item_name: "Mace Core"
+
+  # Armor (Binding + Armor Core + frame = complete piece)
+  dynamictools:armor_binding:
+    material: paper
+    item_model: minecraft:leather
+    data:
+      item_name: "Armor Binding"
+  dynamictools:armor_core:
+    material: paper
+    item_model: minecraft:iron_ingot
+    data:
+      item_name: "Armor Core"
+  dynamictools:helmet_frame:
+    material: paper
+    item_model: minecraft:chainmail_helmet
+    data:
+      item_name: "Helmet Frame"
+  dynamictools:chestplate_frame:
+    material: paper
+    item_model: minecraft:chainmail_chestplate
+    data:
+      item_name: "Chestplate Frame"
+  dynamictools:leggings_frame:
+    material: paper
+    item_model: minecraft:chainmail_leggings
+    data:
+      item_name: "Leggings Frame"
+  dynamictools:boots_frame:
+    material: paper
+    item_model: minecraft:chainmail_boots
+    data:
+      item_name: "Boots Frame"

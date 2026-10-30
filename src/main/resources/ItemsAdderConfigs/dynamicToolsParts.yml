@@ -1,3 +1,115 @@
 info:
-  namespace: DynamicTools
+  namespace: dynamictools
+# Parts reuse vanilla models (generate: false + model_path), so ItemsAdder does not generate any textures or models for them.
 items:
+  binding:
+    enabled: true
+    name: "Binding"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/string
+  handle:
+    enabled: true
+    name: "Handle"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/stick
+
+  # Tools (handle + binding + tool head = complete piece)
+  pickaxe_head:
+    enabled: true
+    name: "Pickaxe Head"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/flint
+  axe_head:
+    enabled: true
+    name: "Axe Head"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/flint
+  hoe_head:
+    enabled: true
+    name: "Hoe Head"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/flint
+  shovel_head:
+    enabled: true
+    name: "Shovel Head"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/flint
+
+  # Weapons (handle + binding + weapon head = complete piece)
+  sword_blade:
+    enabled: true
+    name: "Sword Blade"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/iron_ingot
+  spear_head:
+    enabled: true
+    name: "Spear Head"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/flint
+  mace_core:
+    enabled: true
+    name: "Mace Core"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/heavy_core
+
+  # Armor (Binding + Armor Core + frame = complete piece)
+  armor_binding:
+    enabled: true
+    name: "Armor Binding"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/leather
+  armor_core:
+    enabled: true
+    name: "Armor Core"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/iron_ingot
+  helmet_frame:
+    enabled: true
+    name: "Helmet Frame"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/chainmail_helmet
+  chestplate_frame:
+    enabled: true
+    name: "Chestplate Frame"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/chainmail_chestplate
+  leggings_frame:
+    enabled: true
+    name: "Leggings Frame"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/chainmail_leggings
+  boots_frame:
+    enabled: true
+    name: "Boots Frame"
+    resource:
+      material: PAPER
+      generate: false
+      model_path: minecraft:item/chainmail_boots

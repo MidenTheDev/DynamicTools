@@ -7,6 +7,8 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import us.to.midensthings.dynamicTools.commands.CoreCommands;
 import us.to.midensthings.dynamicTools.commands.DebugCommands;
+import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
+import us.to.midensthings.dynamicTools.compat.ItemsAdderCompat;
 import us.to.midensthings.dynamicTools.materials.PartType;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
 import us.to.midensthings.dynamicTools.tools.ToolMaterialRegistry;
@@ -40,8 +42,19 @@ public final class DynamicTools extends JavaPlugin {
         pm = Bukkit.getPluginManager();
         
         loadCompats();
-        
+
+        // disablePlugin doesn't stop onEnable from running, so stop here if a step shut the plugin down
+        if (!isEnabled()) {
+            return;
+        }
+
         loadConfigs();
+
+        if (!isEnabled()) {
+            return;
+        }
+
+        installCustomItemConfigs();
 
         initializeRegistries();
 
@@ -74,19 +87,37 @@ public final class DynamicTools extends JavaPlugin {
         // Set custom material source
         if (enabledCompats.contains(getConfig().getString("preferred-custom-item-plugin"))) {
             this.customItemSource = CustomItemSource.valueOf(getConfig().getString("preferred-custom-item-plugin").toUpperCase(Locale.ROOT));
+        } else if (!enabledCompats.isEmpty()) {
+            this.customItemSource = CustomItemSource.valueOf(enabledCompats.getFirst().toUpperCase(Locale.ROOT));
         } else {
-            try {
-                this.customItemSource = CustomItemSource.valueOf(enabledCompats.getFirst().toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException e) {
-                this.getLogger().severe("No supported custom items plugin found!");
-                this.getLogger().severe("DynamicTools requires a custom items plugin to function! Shutting down...");
-                pm.disablePlugin(this);
-            }
-
+            this.getLogger().severe("No supported custom items plugin found!");
+            this.getLogger().severe("DynamicTools requires a custom items plugin to function! Shutting down...");
+            pm.disablePlugin(this);
         }
 
 
 
+    }
+
+    /***
+     * Adds the DynamicTools item and block configs to the custom item source plugin only.
+     */
+    private void installCustomItemConfigs() {
+        if (customItemSource == null) {
+            return;
+        }
+        switch (customItemSource) {
+            case ITEMSADDER -> {
+                if (ItemsAdderCompat.installConfigs()) {
+                    getLogger().warning("Added DynamicTools configs to ItemsAdder. Run /iazip to load them.");
+                }
+            }
+            case CRAFTENGINE -> {
+                if (CraftEngineCompat.installConfigs()) {
+                    getLogger().warning("Added DynamicTools configs to CraftEngine. Run /ce reload all to load them.");
+                }
+            }
+        }
     }
 
     @Override
