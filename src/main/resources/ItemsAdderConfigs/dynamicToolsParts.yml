@@ -68,7 +68,7 @@ items:
     resource:
       material: PAPER
       generate: false
-      model_path: minecraft:item/heavy_core
+      model_path: minecraft:item/flint
 
   # Armor (Binding + Armor Core + frame = complete piece)
   armor_binding:

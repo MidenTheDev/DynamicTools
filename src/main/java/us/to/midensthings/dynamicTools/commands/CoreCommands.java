@@ -4,6 +4,7 @@ import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
@@ -14,8 +15,12 @@ import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSele
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import us.to.midensthings.dynamicTools.DynamicTools;
+import us.to.midensthings.dynamicTools.gui.DynamicToolsGui;
+import us.to.midensthings.dynamicTools.gui.PartAssembler;
+import us.to.midensthings.dynamicTools.gui.PartCrafter;
 import us.to.midensthings.dynamicTools.tools.Tool;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
 import us.to.midensthings.dynamicTools.tools.ToolType;
@@ -25,6 +30,7 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public class CoreCommands {
     private final DynamicTools plugin = DynamicTools.getPlugin(DynamicTools.class);
@@ -35,6 +41,7 @@ public class CoreCommands {
                                 CommandSender sender = ctx.getSource().getSender();
                                 if (!(sender instanceof Player)) {
                                     sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Please specify a player!"));
+                                    return Command.SINGLE_SUCCESS;
                                 }
                                 Player p = (Player) sender;
                                 return giveCommand(ctx,p,sender,false);
@@ -51,8 +58,39 @@ public class CoreCommands {
                                             })))
 
                             )))))
+            .then(Commands.literal("open").requires(source -> source.getSender().hasPermission("dynamictools.commands.open"))
+                    .then(Commands.literal("partCrafter").executes(ctx -> openForSender(ctx, PartCrafter::new))
+                            .then(Commands.argument("player",ArgumentTypes.player()).requires(source -> source.getSender().hasPermission("dynamictools.commands.open.others"))
+                                    .executes(ctx -> openForPlayer(ctx, PartCrafter::new, "Part Crafter"))))
+
+                    .then(Commands.literal("partAssembler").executes(ctx -> openForSender(ctx, PartAssembler::new))
+                            .then(Commands.argument("player",ArgumentTypes.player()).requires(source -> source.getSender().hasPermission("dynamictools.commands.open.others"))
+                                    .executes(ctx -> openForPlayer(ctx, PartAssembler::new, "Part Assembler"))))
+            )
 
             .build();
+
+    private void openGUI(Inventory inv, Player p) {
+        p.openInventory(inv);
+    }
+
+    private int openForSender(CommandContext<CommandSourceStack> ctx, Function<Player, DynamicToolsGui> gui) {
+        CommandSender sender = ctx.getSource().getSender();
+        if (!(sender instanceof Player p)) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Please specify a player!"));
+            return Command.SINGLE_SUCCESS;
+        }
+        openGUI(gui.apply(p).getInventory(), p);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private int openForPlayer(CommandContext<CommandSourceStack> ctx, Function<Player, DynamicToolsGui> gui, String guiName) throws CommandSyntaxException {
+        final PlayerSelectorArgumentResolver resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
+        Player p = resolver.resolve(ctx.getSource()).getFirst();
+        openGUI(gui.apply(p).getInventory(), p);
+        ctx.getSource().getSender().sendMessage(MiniMessage.miniMessage().deserialize("<green>Opened the " + guiName + " for " + p.getName()));
+        return Command.SINGLE_SUCCESS;
+    }
 
     private int giveCommand(CommandContext<CommandSourceStack> ctx, Player p, CommandSender sender, boolean bypassChecks) {
         ToolType toolType;

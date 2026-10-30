@@ -1,4 +1,4 @@
-package us.to.midensthings.dynamicTools.materials;
+package us.to.midensthings.dynamicTools.parts;
 
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
@@ -31,6 +31,9 @@ public class Part {
      * @return the Part or null if the item is not a part or is missing necessary data.
      */
     public static Part fromItemStack(ItemStack item) {
+        if (item == null || item.isEmpty()) {
+            return null;
+        }
         String matId = item.getPersistentDataContainer().getOrDefault(NamespacedKeys.partMaterial, PersistentDataType.STRING, "");
         if (matId.isEmpty()) {
             return null;
@@ -48,9 +51,21 @@ public class Part {
         PartType partType;
         try {
             partType = PartType.valueOf(partId);
-            return new Part(partType,toolMat);
+            return new Part(partType,toolMat,item);
         } catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    public PartType getPartType() {
+        return partType;
+    }
+
+    public ToolMaterial getToolMaterial() {
+        return toolMaterial;
+    }
+
+    public ItemStack getItemStack() {
+        return item;
     }
 }

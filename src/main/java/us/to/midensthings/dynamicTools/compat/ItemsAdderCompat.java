@@ -1,11 +1,15 @@
 package us.to.midensthings.dynamicTools.compat;
 
+import dev.lone.itemsadder.api.CustomStack;
 import org.bukkit.Bukkit;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import us.to.midensthings.dynamicTools.parts.PartType;
 import us.to.midensthings.dynamicTools.util.ResourceInstaller;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 
 public class ItemsAdderCompat {
     public static final String NAMESPACE = "dynamictools";
@@ -34,5 +38,21 @@ public class ItemsAdderCompat {
             added |= ResourceInstaller.copyResourceIfAbsent(RESOURCE_FOLDER + file, configsFolder.resolve(file));
         }
         return added;
+    }
+
+    /***
+     * @return a new instance of the part's custom item, or null if ItemsAdder doesn't have it loaded.
+     */
+    public ItemStack getPartStack(PartType partType) {
+        CustomStack stack = CustomStack.getInstance(NAMESPACE+":"+partType.name().toLowerCase(Locale.ROOT));
+        return stack == null ? null : stack.getItemStack();
+    }
+
+    /***
+     * @return the namespaced ID of the ItemsAdder item (e.g. "my_items:ruby"), or null if it isn't an ItemsAdder item.
+     */
+    public static String getCustomItemId(ItemStack item) {
+        CustomStack stack = CustomStack.byItemStack(item);
+        return stack == null ? null : stack.getNamespacedID();
     }
 }

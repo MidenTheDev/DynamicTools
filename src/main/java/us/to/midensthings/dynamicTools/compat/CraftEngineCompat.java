@@ -1,11 +1,17 @@
 package us.to.midensthings.dynamicTools.compat;
 
+import net.momirealms.craftengine.bukkit.api.CraftEngineItems;
+import net.momirealms.craftengine.bukkit.item.BukkitItemDefinition;
+import net.momirealms.craftengine.core.util.Key;
 import org.bukkit.Bukkit;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
+import us.to.midensthings.dynamicTools.parts.PartType;
 import us.to.midensthings.dynamicTools.util.ResourceInstaller;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 
 public class CraftEngineCompat {
     public static final String NAMESPACE = "dynamictools";
@@ -36,5 +42,21 @@ public class CraftEngineCompat {
             added |= ResourceInstaller.copyResourceIfAbsent(RESOURCE_FOLDER + file, configurationFolder.resolve(file));
         }
         return added;
+    }
+
+    /***
+     * @return a new instance of the part's custom item, or null if CraftEngine doesn't have it loaded.
+     */
+    public ItemStack getPartStack(PartType partType) {
+        BukkitItemDefinition definition = CraftEngineItems.byId(NAMESPACE+":"+partType.name().toLowerCase(Locale.ROOT));
+        return definition == null ? null : definition.buildBukkitItem();
+    }
+
+    /***
+     * @return the namespaced ID of the CraftEngine item (e.g. "my_items:ruby"), or null if it isn't a CraftEngine item.
+     */
+    public static String getCustomItemId(ItemStack item) {
+        Key id = CraftEngineItems.getCustomItemId(item);
+        return id == null ? null : id.asString();
     }
 }

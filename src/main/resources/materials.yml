@@ -1,3 +1,7 @@
+# materials: the items that can be crafted into parts of this material in the Part Crafter
+#   "#minecraft:planks"  - every item in an item tag
+#   "minecraft:stick"    - a vanilla item
+#   "my_items:ruby"      - an ItemsAdder or CraftEngine custom item, by its namespaced ID
 wood:
   display-name: "<#b5835a>Wooden</#b5835a>"
   materials:

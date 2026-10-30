@@ -17,6 +17,14 @@ part-crafter:
   # Clicking on a smithing table opens the Part Crafter GUI
   custom-block: false
   # Inject pre-made custom block into custom item plugin
+  gui:
+    title: "Part Crafter"
+    # MiniMessage formatting is supported
+    fill-empty-slots: true
+    # Fill the unused slots with the fill material
+    fill-material: GRAY_STAINED_GLASS_PANE
+    pointer-material: ARROW
+    # Item between the input slot and the parts
 
 
 assembler:
@@ -27,3 +35,10 @@ assembler:
   custom-block: false
   # Inject pre-made custom block into custom item plugin
   gui:
+    title: "Part Assembler"
+    # MiniMessage formatting is supported
+    fill-empty-slots: true
+    # Fill the unused slots with the fill material
+    fill-material: GRAY_STAINED_GLASS_PANE
+    pointer-material: ARROW
+    # Item between the part slots and the result slot

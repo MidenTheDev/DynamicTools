@@ -1,6 +1,6 @@
 package us.to.midensthings.dynamicTools.tools;
 
-import us.to.midensthings.dynamicTools.materials.PartType;
+import us.to.midensthings.dynamicTools.parts.PartType;
 
 import java.util.List;
 import java.util.Locale;
@@ -59,6 +59,19 @@ public enum ToolType {
 
     public PartType getTertiaryPart() {
         return tertiaryPart;
+    }
+
+    /***
+     * Finds the tool type made from the given parts.
+     * @return the ToolType, or null if the parts don't make a tool.
+     */
+    public static ToolType fromParts(PartType primaryPart, PartType secondaryPart, PartType tertiaryPart) {
+        for (ToolType toolType : values()) {
+            if (toolType.primaryPart == primaryPart && toolType.secondaryPart == secondaryPart && toolType.tertiaryPart == tertiaryPart) {
+                return toolType;
+            }
+        }
+        return null;
     }
 
     /***

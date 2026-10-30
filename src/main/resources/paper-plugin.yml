@@ -9,15 +9,19 @@ dependencies:
   server:
     ItemsAdder:
       join-classpath: true
-      load: BEFORE
+      load: AFTER
       required: false
     CraftEngine:
       join-classpath: true
-      load: BEFORE
+      load: AFTER
       required: false
 
 permissions:
   dynamictools.commands.debug:
     default: op
   dynamictools.commands.give:
+    default: op
+  dynamictools.commands.open:
+    default: op
+  dynamictools.commands.open.others:
     default: op

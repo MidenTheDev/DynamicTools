@@ -9,10 +9,11 @@ import us.to.midensthings.dynamicTools.commands.CoreCommands;
 import us.to.midensthings.dynamicTools.commands.DebugCommands;
 import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
 import us.to.midensthings.dynamicTools.compat.ItemsAdderCompat;
-import us.to.midensthings.dynamicTools.materials.PartType;
+import us.to.midensthings.dynamicTools.listeners.GuiListener;
+import us.to.midensthings.dynamicTools.parts.PartType;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
 import us.to.midensthings.dynamicTools.tools.ToolMaterialRegistry;
-import us.to.midensthings.dynamicTools.materials.PartManager;
+import us.to.midensthings.dynamicTools.parts.PartManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ public final class DynamicTools extends JavaPlugin {
         initializeRegistries();
 
         // register events
+        pm.registerEvents(new GuiListener(), this);
 
         registerCommands();
     }
