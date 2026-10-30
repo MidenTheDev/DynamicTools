@@ -23,7 +23,7 @@ public class FrigidModifier implements EventModifier {
 
     @Override
     public String getDisplayName() {
-        return "Frigid";
+        return "<aqua>Frigid";
     }
 
     @Override

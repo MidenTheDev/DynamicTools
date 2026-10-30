@@ -63,4 +63,9 @@ public class ModifierManager {
     private NamespacedKey getKey(Modifier modifier) {
         return NamespacedKey.fromString(modifier.getId(), plugin);
     }
+
+    public static void registerAddonModifier(Modifier modifier) {
+        DynamicTools plugin = DynamicTools.getPlugin(DynamicTools.class);
+        plugin.getModifierRegistry().registerModifier(modifier);
+    }
 }

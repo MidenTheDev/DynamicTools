@@ -24,7 +24,7 @@ public class FireproofModifier implements Modifier {
 
     @Override
     public String getDisplayName() {
-        return "Fireproof";
+        return "<gold>Fireproof";
     }
 
     @Override

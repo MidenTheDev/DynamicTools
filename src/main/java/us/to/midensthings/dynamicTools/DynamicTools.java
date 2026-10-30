@@ -142,6 +142,7 @@ public final class DynamicTools extends JavaPlugin {
         this.getLogger().info("Initializing internal plugin registries");
         this.modifierManager = new ModifierManager();
         this.modifierRegistry = new ModifierRegistry();
+
         // Modifiers have to be registered before the materials that use them are loaded
         modifierRegistry.registerModifier(new ReinforcedModifier());
         modifierRegistry.registerModifier(new FrigidModifier());

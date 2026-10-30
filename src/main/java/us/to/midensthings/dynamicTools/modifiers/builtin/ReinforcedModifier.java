@@ -19,7 +19,7 @@ public class ReinforcedModifier implements StatModifier {
 
     @Override
     public String getDisplayName() {
-        return "Reinforced";
+        return "<#9fb4c7>Reinforced";
     }
 
     @Override

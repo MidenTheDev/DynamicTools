@@ -240,9 +240,8 @@ public class Tool {
      * Formats a modifier like a vanilla enchantment line, e.g. "Reinforced IV" in gray.
      */
     private static Component modifierLine(Modifier modifier, int level) {
-        return MiniMessage.miniMessage().deserialize(modifier.getDisplayName())
-                .append(Component.space())
-                .append(Component.text(RomanNumerals.toRoman(level)))
+        // The numeral goes inside the MiniMessage string so it gets the same formatting as the end of the name
+        return MiniMessage.miniMessage().deserialize(modifier.getDisplayName() + " " + RomanNumerals.toRoman(level))
                 .colorIfAbsent(NamedTextColor.GRAY)
                 .decoration(TextDecoration.ITALIC, false);
     }

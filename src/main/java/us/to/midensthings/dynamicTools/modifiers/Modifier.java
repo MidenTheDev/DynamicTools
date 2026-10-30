@@ -18,7 +18,9 @@ public interface Modifier {
     String getId();
 
     /***
-     * @return the name shown in the tool's lore (MiniMessage). It's gray like enchantments unless it sets its own color.
+     * @return the name shown in the tool's lore, in MiniMessage format (e.g. "<aqua>Frigid"). It's gray like enchantments
+     * unless it sets its own color. The level numeral is added to the end and uses the same formatting as the end of the name,
+     * so leave tags unclosed for the numeral to match.
      */
     String getDisplayName();
 
