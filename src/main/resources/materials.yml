@@ -2,6 +2,14 @@
 #   "#minecraft:planks"  - every item in an item tag
 #   "minecraft:stick"    - a vanilla item
 #   "my_items:ruby"      - an ItemsAdder or CraftEngine custom item, by its namespaced ID
+# modifiers: (optional) the modifiers tools made with this material get, as modifier ID: level
+#   Each modifier only applies to the tool types it supports (e.g. frigid only goes on weapons), so a material can list
+#   separate modifiers for different kinds of tools.
+#   Levels add up with the same modifier from the tool's other materials. A material used in more than one part only counts once.
+#   e.g.
+#   modifiers:
+#     reinforced: 1
+#     frigid: 2
 wood:
   display-name: "<#b5835a>Wooden</#b5835a>"
   materials:
@@ -91,6 +99,8 @@ iron:
     digSpeed: 1.0
     armor: 1.0
     armorToughness: 1.0
+  modifiers:
+    reinforced: 1
 
 
 gold:
@@ -145,12 +155,14 @@ netherite:
     armorToughness: 2.0
     miningLevel: 4
   multipliers:
-    durability: 1.33
+    durability: 1.00
     attackDamage: 1.0
     attackSpeed: 1.0
     digSpeed: 1.0
     armor: 1.0
     armorToughness: 1.0
+  modifiers:
+    fireproof: 1
 
 # For chainmail armor
 iron_chain:
@@ -170,3 +182,33 @@ iron_chain:
     - CHESTPLATE_FRAME
     - LEGGINGS_FRAME
     - BOOTS_FRAME
+
+# custom material example
+#sapphire:
+#  display-name: "<#38e8dd>Diamond</#38e8dd>"
+#  materials:
+#    - "#minecraft:diamond_tool_materials"
+#  stats:
+#    durability: 650
+#    attackDamage: 3.5
+#    attackSpeed: 0.8
+#    digSpeed: 5
+#    armor: 3
+#    armorToughness: 1.0
+#    miningLevel: 4
+#  multipliers:
+#    durability: 1.0
+#    attackDamage: 1.0
+#    attackSpeed: 1.0
+#    digSpeed: 1.0
+#    armor: 1.0
+#    armorToughness: 1.0
+#  part-blacklist:
+#    - ARMOR_CORE
+#    - ARMOR_BINDING
+#    - HELMET_FRAME
+#    - CHESTPLATE_FRAME
+#    - LEGGINGS_FRAME
+#    - BOOTS_FRAME
+#  modifiers:
+#    frigid: 1

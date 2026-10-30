@@ -16,15 +16,25 @@ import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+import us.to.midensthings.dynamicTools.DynamicTools;
+import us.to.midensthings.dynamicTools.modifiers.Modifier;
+import us.to.midensthings.dynamicTools.modifiers.StatModifier;
 import us.to.midensthings.dynamicTools.util.NamespacedKeys;
+import us.to.midensthings.dynamicTools.util.RomanNumerals;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 public class Tool {
+    private static final DynamicTools plugin = DynamicTools.getPlugin(DynamicTools.class);
+
     // Same number format vanilla uses for attribute tooltips
     private static final DecimalFormat STAT_FORMAT = new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ROOT));
 
@@ -37,6 +47,9 @@ public class Tool {
     private final ToolMaterial primaryMaterial;
     private final ToolMaterial secondaryMaterial;
     private final ToolMaterial tertiaryMaterial;
+
+    // Map of modifiers and their levels
+    private Map<Modifier,Integer> modifiers;
 
 
     /* Mining Levels
@@ -113,16 +126,6 @@ public class Tool {
                 ((primaryMaterial.getAttackSpeedMultiplier() + secondaryMaterial.getAttackSpeedMultiplier() + tertiaryMaterial.getAttackSpeedMultiplier()) / 3));
 
 
-        ItemAttributeModifiers mods = ItemAttributeModifiers.itemAttributes()
-                .addModifier(Attribute.ATTACK_DAMAGE,
-                        new AttributeModifier(NamespacedKey.minecraft("base_attack_damage"), damageStat - 1.0,
-                                AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND))
-                .addModifier(Attribute.ATTACK_SPEED,
-                        new AttributeModifier(NamespacedKey.minecraft("base_attack_speed"), speedStat - 4.0,
-                                AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND))
-                .build();
-        item.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, mods);
-
         /*
         Durability formula
         (Head Material Durability + 1/2 handle material Durability + 1/2 binding material Durability) / 2 X (Mean durability multiplier across all parts) rounded down.
@@ -130,14 +133,40 @@ public class Tool {
         double durabilityStat = (primaryMaterial.getDurability() + (0.5 * secondaryMaterial.getDurability()) + (0.5 * tertiaryMaterial.getDurability())) *
                 ((primaryMaterial.getDurabilityMultiplier() + secondaryMaterial.getDurabilityMultiplier() + tertiaryMaterial.getDurabilityMultiplier()) / 3);
 
-        item.setData(DataComponentTypes.MAX_DAMAGE, Math.max(1, (int) Math.floor(durabilityStat)));
-
         /*
         Dig speed formula
         (Head Material Dig Speed + 1/2 handle material Dig Speed + 1/2 binding material Dig Speed) / 2 X (Mean dig speed multiplier across all parts).
          */
         double digSpeedStat = (primaryMaterial.getDigSpeed() + (0.5 * secondaryMaterial.getDigSpeed()) + (0.5 * tertiaryMaterial.getDigSpeed())) *
                 ((primaryMaterial.getDigSpeedMultiplier() + secondaryMaterial.getDigSpeedMultiplier() + tertiaryMaterial.getDigSpeedMultiplier()) / 3);
+
+        // Apply modifiers to the stats from the materials
+        this.modifiers = collectModifiers(toolType, primaryMaterial, secondaryMaterial, tertiaryMaterial);
+        ToolStats stats = new ToolStats(damageStat, speedStat, durabilityStat, digSpeedStat);
+        modifiers.forEach((modifier, level) -> {
+            if (modifier instanceof StatModifier statModifier) {
+                statModifier.apply(stats, level);
+            }
+        });
+        plugin.getModifierManager().setModifiers(item, modifiers);
+
+        ItemAttributeModifiers.Builder mods = ItemAttributeModifiers.itemAttributes()
+                .addModifier(Attribute.ATTACK_DAMAGE,
+                        new AttributeModifier(NamespacedKey.minecraft("base_attack_damage"), stats.getAttackDamage() - 1.0,
+                                AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND))
+                .addModifier(Attribute.ATTACK_SPEED,
+                        new AttributeModifier(NamespacedKey.minecraft("base_attack_speed"), stats.getAttackSpeed() - 4.0,
+                                AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+        List<ToolStats.ExtraAttribute> extraAttributes = stats.getExtraAttributes();
+        for (int i = 0; i < extraAttributes.size(); i++) {
+            ToolStats.ExtraAttribute extra = extraAttributes.get(i);
+            mods.addModifier(extra.attribute(), new AttributeModifier(new NamespacedKey(plugin, "tool_modifier_" + i), extra.amount(),
+                    extra.operation(), EquipmentSlotGroup.MAINHAND));
+        }
+        item.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, mods.build());
+
+        item.setData(DataComponentTypes.MAX_DAMAGE, Math.max(1, (int) Math.floor(stats.getDurability())));
+        digSpeedStat = stats.getDigSpeed();
 
         // Dig speed lives on the tool component's rules, so rebuild the base item's rules with the new speed.
         // Rules without a speed (the incorrect_for_X_tool drop deny list) keep the mining level of the base item.
@@ -164,20 +193,73 @@ public class Tool {
         item.setItemMeta(meta);
 
         // Hide the vanilla attribute tooltip and redraw it in the lore so dig speed can sit in the same block.
+        // Modifiers go above the attributes, where vanilla shows enchantments.
         List<Component> lore = new ArrayList<>();
+        modifiers.forEach((modifier, level) -> lore.add(modifierLine(modifier, level)));
         lore.add(Component.empty());
         lore.add(Component.translatable("item.modifiers.mainhand", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
-        lore.add(statLine(damageStat, Component.translatable(Attribute.ATTACK_DAMAGE)));
-        lore.add(statLine(speedStat, Component.translatable(Attribute.ATTACK_SPEED)));
+        lore.add(statLine(stats.getAttackDamage(), Component.translatable(Attribute.ATTACK_DAMAGE)));
+        lore.add(statLine(stats.getAttackSpeed(), Component.translatable(Attribute.ATTACK_SPEED)));
         if (toolType.isMiningTool()) {
             lore.add(statLine(digSpeedStat, Component.text("Mining Speed")));
+        }
+        for (ToolStats.ExtraAttribute extra : extraAttributes) {
+            lore.add(extraAttributeLine(extra));
         }
         item.setData(DataComponentTypes.LORE, ItemLore.lore(lore));
         item.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay()
                 .addHiddenComponents(DataComponentTypes.ATTRIBUTE_MODIFIERS)
                 .build());
 
+        modifiers.forEach((modifier, level) -> modifier.applyToItem(item, level));
+
         // TODO: Set custom model for custom texture
+    }
+
+    /***
+     * Gets the modifiers from the tool's materials that apply to this tool type. Levels from different materials add together,
+     * but a material used in more than one part only counts once.
+     */
+    private static Map<Modifier,Integer> collectModifiers(ToolType toolType, ToolMaterial... materials) {
+        Map<Modifier,Integer> modifiers = new LinkedHashMap<>();
+        Set<ToolMaterial> countedMaterials = new HashSet<>();
+        for (ToolMaterial material : materials) {
+            if (!countedMaterials.add(material)) {
+                continue;
+            }
+            material.getModifiers().forEach((modifier, level) -> {
+                if (modifier.getValidToolTypes().contains(toolType)) {
+                    modifiers.merge(modifier, level, Integer::sum);
+                }
+            });
+        }
+        return modifiers;
+    }
+
+    /***
+     * Formats a modifier like a vanilla enchantment line, e.g. "Reinforced IV" in gray.
+     */
+    private static Component modifierLine(Modifier modifier, int level) {
+        return MiniMessage.miniMessage().deserialize(modifier.getDisplayName())
+                .append(Component.space())
+                .append(Component.text(RomanNumerals.toRoman(level)))
+                .colorIfAbsent(NamedTextColor.GRAY)
+                .decoration(TextDecoration.ITALIC, false);
+    }
+
+    /***
+     * Formats an extra attribute like a vanilla attribute modifier line, e.g. " +0.5 Entity Interaction Range" in blue.
+     */
+    private static Component extraAttributeLine(ToolStats.ExtraAttribute extra) {
+        int operation = extra.operation().ordinal();
+        // Vanilla shows the multiply operations as percentages
+        double amount = operation == 0 ? extra.amount() : extra.amount() * 100;
+        boolean positive = amount >= 0;
+        return Component.space()
+                .append(Component.translatable("attribute.modifier." + (positive ? "plus." : "take.") + operation,
+                        Component.text(STAT_FORMAT.format(Math.abs(amount))), Component.translatable(extra.attribute())))
+                .color(positive ? NamedTextColor.BLUE : NamedTextColor.RED)
+                .decoration(TextDecoration.ITALIC, false);
     }
 
     /***
@@ -241,5 +323,9 @@ public class Tool {
 
     public ToolMaterial getTertiaryMaterial() {
         return tertiaryMaterial;
+    }
+
+    public Map<Modifier, Integer> getModifiers() {
+        return modifiers;
     }
 }

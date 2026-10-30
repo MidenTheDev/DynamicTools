@@ -8,6 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import us.to.midensthings.dynamicTools.DynamicTools;
 import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
 import us.to.midensthings.dynamicTools.compat.ItemsAdderCompat;
+import us.to.midensthings.dynamicTools.modifiers.Modifier;
 import us.to.midensthings.dynamicTools.parts.PartType;
 
 import java.util.ArrayList;
@@ -52,9 +53,12 @@ public class ToolMaterial {
 
     // Map for other attributes this material modifies?
     private Map<String,?> attributeMap;
+    // The modifiers this material gives tools and their levels
+    private Map<Modifier,Integer> modifiers;
 
 
-    public ToolMaterial(String id, double durability, double durabilityMultiplier, double attackDamage, double attackDamageMultiplier, double attackSpeed, double attackSpeedMultiplier, double digSpeed, double digSpeedMultiplier, double armor, double armorMultiplier, double armorToughness, double armorToughnessMultiplier, int miningLevel, String displayName, List<PartType> validParts, List<String> validInputMaterials) {
+
+    public ToolMaterial(String id, double durability, double durabilityMultiplier, double attackDamage, double attackDamageMultiplier, double attackSpeed, double attackSpeedMultiplier, double digSpeed, double digSpeedMultiplier, double armor, double armorMultiplier, double armorToughness, double armorToughnessMultiplier, int miningLevel, String displayName, List<PartType> validParts, List<String> validInputMaterials, Map<Modifier,Integer> modifiers) {
         this.id = id;
         this.durability = durability;
         this.durabilityMultiplier = durabilityMultiplier;
@@ -72,6 +76,7 @@ public class ToolMaterial {
         this.displayName = displayName;
         this.validParts = validParts;
         this.validInputMaterials = validInputMaterials;
+        this.modifiers = modifiers;
         parseInputMaterials();
     }
 
@@ -239,5 +244,12 @@ public class ToolMaterial {
 
     public List<String> getValidInputMaterials() {
         return validInputMaterials;
+    }
+
+    /***
+     * @return the modifiers tools made with this material can get and their levels. Empty if the material has none.
+     */
+    public Map<Modifier, Integer> getModifiers() {
+        return modifiers;
     }
 }

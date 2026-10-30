@@ -2,6 +2,7 @@ package us.to.midensthings.dynamicTools;
 
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.Bukkit;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -10,6 +11,12 @@ import us.to.midensthings.dynamicTools.commands.DebugCommands;
 import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
 import us.to.midensthings.dynamicTools.compat.ItemsAdderCompat;
 import us.to.midensthings.dynamicTools.listeners.GuiListener;
+import us.to.midensthings.dynamicTools.modifiers.Modifier;
+import us.to.midensthings.dynamicTools.modifiers.ModifierManager;
+import us.to.midensthings.dynamicTools.modifiers.ModifierRegistry;
+import us.to.midensthings.dynamicTools.modifiers.builtin.FireproofModifier;
+import us.to.midensthings.dynamicTools.modifiers.builtin.FrigidModifier;
+import us.to.midensthings.dynamicTools.modifiers.builtin.ReinforcedModifier;
 import us.to.midensthings.dynamicTools.parts.PartType;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
 import us.to.midensthings.dynamicTools.tools.ToolMaterialRegistry;
@@ -17,7 +24,9 @@ import us.to.midensthings.dynamicTools.parts.PartManager;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 
 public final class DynamicTools extends JavaPlugin {
@@ -28,6 +37,8 @@ public final class DynamicTools extends JavaPlugin {
     
     private ToolMaterialRegistry toolMaterialRegistry;
     private PartManager partManager;
+    private ModifierRegistry modifierRegistry;
+    private ModifierManager modifierManager;
     
     private PluginManager pm;
     private CustomItemSource customItemSource;
@@ -129,6 +140,13 @@ public final class DynamicTools extends JavaPlugin {
 
     public void initializeRegistries() {
         this.getLogger().info("Initializing internal plugin registries");
+        this.modifierManager = new ModifierManager();
+        this.modifierRegistry = new ModifierRegistry();
+        // Modifiers have to be registered before the materials that use them are loaded
+        modifierRegistry.registerModifier(new ReinforcedModifier());
+        modifierRegistry.registerModifier(new FrigidModifier());
+        modifierRegistry.registerModifier(new FireproofModifier());
+
         this.toolMaterialRegistry = new ToolMaterialRegistry();
 
         materialsConf.getConfigurationSection("").getKeys(false).forEach(mat -> {
@@ -158,6 +176,19 @@ public final class DynamicTools extends JavaPlugin {
 
             }
 
+            Map<Modifier,Integer> modifiers = new LinkedHashMap<>();
+            ConfigurationSection modifiersSection = materialsConf.getConfigurationSection(mat+".modifiers");
+            if (modifiersSection != null) {
+                for (String modifierId : modifiersSection.getKeys(false)) {
+                    Modifier modifier = modifierRegistry.getModifier(modifierId.toLowerCase(Locale.ROOT));
+                    if (modifier == null) {
+                        this.getLogger().warning("Unknown modifier "+modifierId+" in material "+mat);
+                        continue;
+                    }
+                    modifiers.put(modifier, modifiersSection.getInt(modifierId, 1));
+                }
+            }
+
             ToolMaterial material = new ToolMaterial(
                     mat.toLowerCase(),
                     materialsConf.getDouble(mat+".stats.durability"),
@@ -175,7 +206,8 @@ public final class DynamicTools extends JavaPlugin {
                     materialsConf.getInt(mat+".stats.miningLevel"),
                     materialsConf.getString(mat+".display-name"),
                     validParts,
-                    materialsConf.getStringList(mat+".materials")
+                    materialsConf.getStringList(mat+".materials"),
+                    modifiers
             );
 
             toolMaterialRegistry.registerToolMaterial(material);
@@ -208,6 +240,14 @@ public final class DynamicTools extends JavaPlugin {
 
     public PartManager getPartManager() {
         return partManager;
+    }
+
+    public ModifierRegistry getModifierRegistry() {
+        return modifierRegistry;
+    }
+
+    public ModifierManager getModifierManager() {
+        return modifierManager;
     }
     
     public List<String> getEnabledCompats() {
