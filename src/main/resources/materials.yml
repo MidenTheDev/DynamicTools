@@ -1,0 +1,29 @@
+wood:
+  display-name: "Wooden"
+  materials:
+    - "#planks"
+  stats:
+    durability: 60
+    attackDamage: 2
+    attackSpeed: 0.8
+    digSpeed: 2
+    armor: 0
+    armorToughness: 0
+    miningLevel: 1
+  multipliers:
+    durability: 1.0
+    attackDamage: 1.0
+    attackSpeed: 1.0
+    digSpeed: 1.0
+    armor: 1.0
+    armorToughness: 1.0
+  use-part-whitelist: false
+  use-part-blacklist: true
+  part-whitelist: []
+  part-blacklist:
+    - ARMOR_CORE
+    - ARMOR_BINDING
+    - HELMET_FRAME
+    - CHESTPLATE_FRAME
+    - LEGGINGS_FRAME
+    - BOOTS_FRAME

@@ -4,3 +4,20 @@ version: '${version}'
 main: us.to.midensthings.dynamicTools.DynamicTools
 api-version: '26.3'
 load: POSTWORLD
+
+dependencies:
+  server:
+    ItemsAdder:
+      join-classpath: true
+      load: BEFORE
+      required: false
+    CraftEngine:
+      join-classpath: true
+      load: BEFORE
+      required: false
+
+permissions:
+  dynamictools.commands.debug:
+    default: op
+  dynamictools.commands.give:
+    default: op

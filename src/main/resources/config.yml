@@ -1,0 +1,29 @@
+config-version: '1.0'
+
+block-vanilla-tools: false
+# Whether or not to prevent the crafting of vanilla tools
+
+block-vanilla-armor: false
+# Whether or not to prevent the crafting of vanilla armor
+
+preferred-custom-item-plugin: ItemsAdder
+# Options: CraftEngine, ItemsAdder
+# DT will try to use whatever plugin you list, but if the plugin isn't found it will fall back to whatever option it can find.
+
+part-crafter:
+  share-smithing-table: true
+  # Clicking on a smithing table prompts the user to choose between the vanilla GUI or the Part Crafter GUI
+  replace-smithing-table: false
+  # Clicking on a smithing table opens the Part Crafter GUI
+  custom-block: false
+  # Inject pre-made custom block into custom item plugin
+
+
+assembler:
+  share-anvil: true
+  # Clicking on an anvil prompts the user to choose between the vanilla GUI or the Part Assembler GUI
+  replace-anvil: false
+  # Clicking on an anvil opens the Part Crafter GUI
+  custom-block: false
+  # Inject pre-made custom block into custom item plugin
+  gui:
