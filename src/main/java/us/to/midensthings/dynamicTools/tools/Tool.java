@@ -2,7 +2,11 @@ package us.to.midensthings.dynamicTools.tools;
 
 import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
+import io.papermc.paper.datacomponent.item.ItemLore;
+import io.papermc.paper.datacomponent.item.TooltipDisplay;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -12,7 +16,16 @@ import org.bukkit.inventory.EquipmentSlotGroup;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 public class Tool {
+    // Same number format vanilla uses for attribute tooltips
+    private static final DecimalFormat STAT_FORMAT = new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ROOT));
+
     private final ItemStack item;
 
     private final ToolType toolType;
@@ -84,14 +97,14 @@ public class Tool {
         Tool Type Modifier X (Head Material DMG + 1/2 handle material DMG + 1/2 binding material DMG) X (Mean dmg multiplier across all parts) rounded down.
          */
 
-        double damageStat = toolType.getAttackDamageMod() * (headToolMaterial.getAttackDamage() + (0.5 * handleToolMaterial.getAttackDamage()) + (0.5 * bindingToolMaterial.getAttackDamage()) *
+        double damageStat = toolType.getAttackDamageMod() * ((headToolMaterial.getAttackDamage() + (0.5 * handleToolMaterial.getAttackDamage()) + (0.5 * bindingToolMaterial.getAttackDamage())) *
                 ((headToolMaterial.getAttackDamageMultiplier() + handleToolMaterial.getAttackDamageMultiplier() + bindingToolMaterial.getAttackDamageMultiplier()) / 3));
 
         /*
         Speed formula
         Tool Type Modifier X (Head Material Speed + 1/2 handle material Speed + 1/2 binding material Speed) X (Mean dmg multiplier across all parts) rounded down.
          */
-        double speedStat = toolType.getAttackSpeedMod() * (headToolMaterial.getAttackSpeed() + (0.5 * handleToolMaterial.getAttackSpeed()) + (0.5 * bindingToolMaterial.getAttackSpeed()) *
+        double speedStat = toolType.getAttackSpeedMod() * ((headToolMaterial.getAttackSpeed() + (0.5 * handleToolMaterial.getAttackSpeed()) + (0.5 * bindingToolMaterial.getAttackSpeed())) *
                 ((headToolMaterial.getAttackSpeedMultiplier() + handleToolMaterial.getAttackSpeedMultiplier() + bindingToolMaterial.getAttackSpeedMultiplier()) / 3));
 
 
@@ -105,16 +118,71 @@ public class Tool {
                 .build();
         item.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, mods);
 
+        /*
+        Durability formula
+        (Head Material Durability + 1/2 handle material Durability + 1/2 binding material Durability) / 2 X (Mean durability multiplier across all parts) rounded down.
+        Dividing by 2 makes a tool made from a single material match that material's durability.
+         */
+        double durabilityStat = (headToolMaterial.getDurability() + (0.5 * handleToolMaterial.getDurability()) + (0.5 * bindingToolMaterial.getDurability())) *
+                ((headToolMaterial.getDurabilityMultiplier() + handleToolMaterial.getDurabilityMultiplier() + bindingToolMaterial.getDurabilityMultiplier()) / 3);
+
+        item.setData(DataComponentTypes.MAX_DAMAGE, Math.max(1, (int) Math.floor(durabilityStat)));
+
+        /*
+        Dig speed formula
+        (Head Material Dig Speed + 1/2 handle material Dig Speed + 1/2 binding material Dig Speed) / 2 X (Mean dig speed multiplier across all parts).
+        Dividing by 2 makes a tool made from a single material match that material's dig speed.
+         */
+        double digSpeedStat = ((headToolMaterial.getDigSpeed() + (0.5 * handleToolMaterial.getDigSpeed()) + (0.5 * bindingToolMaterial.getDigSpeed())) / 2) *
+                ((headToolMaterial.getDigSpeedMultiplier() + handleToolMaterial.getDigSpeedMultiplier() + bindingToolMaterial.getDigSpeedMultiplier()) / 3);
+
+        // Dig speed lives on the tool component's rules, so rebuild the base item's rules with the new speed.
+        // Rules without a speed (the incorrect_for_X_tool drop deny list) keep the mining level of the base item.
+        if (toolType.isMiningTool()) {
+            io.papermc.paper.datacomponent.item.Tool baseTool = item.getData(DataComponentTypes.TOOL);
+            if (baseTool != null) {
+                List<io.papermc.paper.datacomponent.item.Tool.Rule> rules = new ArrayList<>();
+                for (io.papermc.paper.datacomponent.item.Tool.Rule rule : baseTool.rules()) {
+                    rules.add(rule.speed() == null ? rule
+                            : io.papermc.paper.datacomponent.item.Tool.rule(rule.blocks(), (float) digSpeedStat, rule.correctForDrops()));
+                }
+                item.setData(DataComponentTypes.TOOL, io.papermc.paper.datacomponent.item.Tool.tool()
+                        .defaultMiningSpeed(baseTool.defaultMiningSpeed())
+                        .damagePerBlock(baseTool.damagePerBlock())
+                        .canDestroyBlocksInCreative(baseTool.canDestroyBlocksInCreative())
+                        .addRules(rules)
+                        .build());
+            }
+        }
+
         // Set ItemMeta values for the item:
         ItemMeta meta = item.getItemMeta();
         meta.customName(generateDisplayNameComponent());
         item.setItemMeta(meta);
 
+        // Hide the vanilla attribute tooltip and redraw it in the lore so dig speed can sit in the same block.
+        List<Component> lore = new ArrayList<>();
+        lore.add(Component.empty());
+        lore.add(Component.translatable("item.modifiers.mainhand", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+        lore.add(statLine(damageStat, Component.translatable(Attribute.ATTACK_DAMAGE)));
+        lore.add(statLine(speedStat, Component.translatable(Attribute.ATTACK_SPEED)));
+        if (toolType.isMiningTool()) {
+            lore.add(statLine(digSpeedStat, Component.text("Mining Speed")));
+        }
+        item.setData(DataComponentTypes.LORE, ItemLore.lore(lore));
+        item.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay()
+                .addHiddenComponents(DataComponentTypes.ATTRIBUTE_MODIFIERS)
+                .build());
+    }
 
-
-        // TODO: Hide attribute modifiers and replace with realistic looking item lore?
-
-
+    /***
+     * Formats a stat the same way as a vanilla "When in Main Hand:" attribute line, e.g. " 4 Attack Damage" in dark green.
+     */
+    private static Component statLine(double value, Component name) {
+        return Component.space()
+                .append(Component.translatable("attribute.modifier.equals.0", Component.text(STAT_FORMAT.format(value)), name))
+                .color(NamedTextColor.DARK_GREEN)
+                .decoration(TextDecoration.ITALIC, false);
     }
 
     /***

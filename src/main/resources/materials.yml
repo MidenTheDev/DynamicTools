@@ -3,7 +3,7 @@ wood:
   materials:
     - "#minecraft:wooden_tool_materials"
   stats:
-    durability: 60
+    durability: 30
     attackDamage: 2
     attackSpeed: 0.8
     digSpeed: 2
@@ -28,7 +28,7 @@ stone:
   materials:
     - "#minecraft:stone_tool_materials"
   stats:
-    durability: 130
+    durability: 65
     attackDamage: 2.5
     attackSpeed: 0.8
     digSpeed: 4
@@ -53,7 +53,7 @@ copper:
   materials:
     - "#minecraft:copper_tool_materials"
   stats:
-    durability: 190
+    durability: 95
     attackDamage: 2.5
     attackSpeed: 0.8
     digSpeed: 5
@@ -73,7 +73,7 @@ iron:
   materials:
     - "#minecraft:iron_tool_materials"
   stats:
-    durability: 250
+    durability: 125
     attackDamage: 3
     attackSpeed: 0.8
     digSpeed: 6
@@ -94,14 +94,14 @@ gold:
   materials:
     - "#minecraft:gold_tool_materials"
   stats:
-    durability: 80
+    durability: 40
     attackDamage: 3
     attackSpeed: 0.8
     digSpeed: 8
     armor: 1
     miningLevel: 2
   multipliers:
-    durability: 0.6
+    durability: 0.5
     attackDamage: 1.0
     attackSpeed: 1.0
     digSpeed: 1.45
@@ -113,7 +113,7 @@ diamond:
   materials:
     - "#minecraft:diamond_tool_materials"
   stats:
-    durability: 1560
+    durability: 780
     attackDamage: 3.5
     attackSpeed: 0.8
     digSpeed: 8
@@ -133,7 +133,7 @@ netherite:
   materials:
     - "#minecraft:netherite_tool_materials"
   stats:
-    durability: 1560
+    durability: 780
     attackDamage: 4
     attackSpeed: 0.8
     digSpeed: 9
@@ -141,10 +141,10 @@ netherite:
     armorToughness: 2.0
     miningLevel: 4
   multipliers:
-    durability: 1.25
+    durability: 1.33
     attackDamage: 1.0
     attackSpeed: 1.0
-    digSpeed: 1.45
+    digSpeed: 1.0
     armor: 1.0
     armorToughness: 1.0
 

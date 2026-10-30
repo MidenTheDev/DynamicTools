@@ -61,6 +61,16 @@ public enum ToolType {
         return tertiaryPart;
     }
 
+    /***
+     * @return true if this tool type digs blocks, and so has a dig speed.
+     */
+    public boolean isMiningTool() {
+        return switch (this) {
+            case PICKAXE, AXE, SHOVEL, HOE -> true;
+            default -> false;
+        };
+    }
+
     public String getDisplayName() {
         return this.name().charAt(0)+this.name().substring(1).toLowerCase(Locale.ROOT);
     }
