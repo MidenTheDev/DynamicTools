@@ -6,7 +6,7 @@ wood:
     durability: 30
     attackDamage: 2
     attackSpeed: 0.8
-    digSpeed: 2
+    digSpeed: 1
     miningLevel: 1
   multipliers:
     durability: 1.0
@@ -31,7 +31,7 @@ stone:
     durability: 65
     attackDamage: 2.5
     attackSpeed: 0.8
-    digSpeed: 4
+    digSpeed: 2
     miningLevel: 2
   multipliers:
     durability: 1.0
@@ -56,7 +56,7 @@ copper:
     durability: 95
     attackDamage: 2.5
     attackSpeed: 0.8
-    digSpeed: 5
+    digSpeed: 2.5
     armor: 1
     miningLevel: 2
   multipliers:
@@ -76,7 +76,7 @@ iron:
     durability: 125
     attackDamage: 3
     attackSpeed: 0.8
-    digSpeed: 6
+    digSpeed: 3
     armor: 2
     armorToughness: 0.5
     miningLevel: 3
@@ -97,7 +97,7 @@ gold:
     durability: 40
     attackDamage: 3
     attackSpeed: 0.8
-    digSpeed: 8
+    digSpeed: 4
     armor: 1
     miningLevel: 2
   multipliers:
@@ -116,7 +116,7 @@ diamond:
     durability: 780
     attackDamage: 3.5
     attackSpeed: 0.8
-    digSpeed: 8
+    digSpeed: 4
     armor: 3
     armorToughness: 1.0
     miningLevel: 4
@@ -136,7 +136,7 @@ netherite:
     durability: 780
     attackDamage: 4
     attackSpeed: 0.8
-    digSpeed: 9
+    digSpeed: 4.5
     armor: 3
     armorToughness: 2.0
     miningLevel: 4
