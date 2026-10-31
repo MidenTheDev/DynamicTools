@@ -18,6 +18,7 @@ import us.to.midensthings.dynamicTools.gui.WorkstationChooser;
 import us.to.midensthings.dynamicTools.parts.PartType;
 import us.to.midensthings.dynamicTools.tools.Tool;
 import us.to.midensthings.dynamicTools.util.ItemManager;
+import us.to.midensthings.dynamicTools.util.Schedulers;
 
 public class GuiListener implements Listener {
     private final DynamicTools plugin = DynamicTools.getPlugin(DynamicTools.class);
@@ -28,9 +29,9 @@ public class GuiListener implements Listener {
         if (top.getHolder(false) instanceof WorkstationChooser chooser) {
             e.setCancelled(true);
             Runnable action = e.getClickedInventory() == top ? chooser.getAction(e.getSlot()) : null;
-            if (action != null) {
+            if (action != null && e.getWhoClicked() instanceof Player clicker) {
                 // Opening another inventory has to wait until the click is over
-                Bukkit.getScheduler().runTask(plugin, action);
+                Schedulers.runNextTick(clicker, action);
             }
             return;
         }
@@ -64,7 +65,7 @@ public class GuiListener implements Listener {
 
         if (gui.isInputSlot(e.getSlot())) {
             // Let the click happen, then update the outputs once the input has changed
-            scheduleUpdate(gui);
+            scheduleUpdate(gui, p);
             return;
         }
 
@@ -157,8 +158,8 @@ public class GuiListener implements Listener {
             }
             touchesGui = true;
         }
-        if (touchesGui) {
-            scheduleUpdate(gui);
+        if (touchesGui && e.getWhoClicked() instanceof Player p) {
+            scheduleUpdate(gui, p);
         }
     }
 
@@ -169,7 +170,7 @@ public class GuiListener implements Listener {
         }
     }
 
-    private void scheduleUpdate(DynamicToolsGui gui) {
-        Bukkit.getScheduler().runTask(plugin, gui::update);
+    private void scheduleUpdate(DynamicToolsGui gui, Player player) {
+        Schedulers.runNextTick(player, gui::update);
     }
 }

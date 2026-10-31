@@ -51,8 +51,8 @@ public class BeheadingModifier implements EventModifier {
             EntityType.ENDER_DRAGON, Material.DRAGON_HEAD
     ));
 
-    // Heads from mob-heads.yml
-    private final Map<EntityType, ItemStack> customHeads = new HashMap<>();
+    // Heads from mob-heads.yml. Replaced as a whole on reload (volatile), since deaths can be handled on other threads on Folia.
+    private volatile Map<EntityType, ItemStack> customHeads = Map.of();
 
     public BeheadingModifier() {
         loadHeads();
@@ -120,10 +120,12 @@ public class BeheadingModifier implements EventModifier {
         if (!file.exists()) {
             plugin.saveResource("mob-heads.yml", false);
         }
-        customHeads.clear();
+        // Built separately and swapped in at the end, so a death on another thread never sees a half loaded map
+        Map<EntityType, ItemStack> loadedHeads = new HashMap<>();
 
         ConfigurationSection heads = YamlConfiguration.loadConfiguration(file).getConfigurationSection("heads");
         if (heads == null) {
+            customHeads = Map.of();
             return;
         }
         for (String id : heads.getKeys(false)) {
@@ -138,9 +140,10 @@ public class BeheadingModifier implements EventModifier {
                 plugin.getLogger().warning("Mob " + id + " in mob-heads.yml has no texture");
                 continue;
             }
-            customHeads.put(type, createCustomHead(type, texture, heads.getString(id + ".name")));
+            loadedHeads.put(type, createCustomHead(type, texture, heads.getString(id + ".name")));
         }
-        plugin.debug("Loaded " + customHeads.size() + " custom mob heads");
+        customHeads = Map.copyOf(loadedHeads);
+        plugin.debug("Loaded " + loadedHeads.size() + " custom mob heads");
     }
 
     private static ItemStack createCustomHead(EntityType type, String texture, String name) {

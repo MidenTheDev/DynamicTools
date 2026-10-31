@@ -45,7 +45,8 @@ public final class DynamicTools extends JavaPlugin {
         CRAFTENGINE
     }
     
-    private ToolMaterialRegistry toolMaterialRegistry;
+    // volatile because /dt reload replaces these while other region threads may be reading them on Folia
+    private volatile ToolMaterialRegistry toolMaterialRegistry;
     private PartManager partManager;
     private ModifierRegistry modifierRegistry;
     private ModifierManager modifierManager;
@@ -57,7 +58,7 @@ public final class DynamicTools extends JavaPlugin {
     private List<String> enabledCompats;
 
     File materialsFile = new File(this.getDataFolder()+"/materials.yml");
-    YamlConfiguration materialsConf;
+    volatile YamlConfiguration materialsConf;
 
     @Override
     public void onEnable() {
@@ -150,6 +151,11 @@ public final class DynamicTools extends JavaPlugin {
         // Plugin shutdown logic
         // The close event isn't handled once the plugin is disabled, so give back the items in open GUIs before they're lost
         for (Player player : Bukkit.getOnlinePlayers()) {
+            // On Folia, players owned by another thread can't be touched from here. Their GUIs close when they disconnect,
+            // which gives the items back through the close event.
+            if (!Bukkit.isOwnedByCurrentRegion(player)) {
+                continue;
+            }
             if (player.getOpenInventory().getTopInventory().getHolder(false) instanceof DynamicToolsGui gui) {
                 gui.returnInputs(player);
                 player.closeInventory();

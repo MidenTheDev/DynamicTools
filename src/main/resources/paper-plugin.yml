@@ -3,6 +3,7 @@ version: '${version}'
 
 main: us.to.midensthings.dynamicTools.DynamicTools
 api-version: '26.1'
+folia-supported: true
 load: POSTWORLD
 
 dependencies:

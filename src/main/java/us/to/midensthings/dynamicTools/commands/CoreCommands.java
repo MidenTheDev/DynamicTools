@@ -28,6 +28,7 @@ import us.to.midensthings.dynamicTools.resourcepack.ResourcePackGenerator;
 import us.to.midensthings.dynamicTools.tools.Tool;
 import us.to.midensthings.dynamicTools.tools.ToolItems;
 import us.to.midensthings.dynamicTools.util.RomanNumerals;
+import us.to.midensthings.dynamicTools.util.Schedulers;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
 import us.to.midensthings.dynamicTools.tools.ToolType;
 import us.to.midensthings.dynamicTools.util.ItemManager;
@@ -192,27 +193,28 @@ public class CoreCommands {
             return Command.SINGLE_SUCCESS;
         }
 
-        // Copy the materials on the main thread so the generator doesn't read the registry while it could change
+        // Copy the materials before going off thread so the generator doesn't read the registry while it could change
         List<ToolMaterial> materials = new ArrayList<>(plugin.getToolMaterialRegistry().getMaterials());
         sender.sendMessage(MiniMessage.miniMessage().deserialize("<gray>Generating textures..."));
 
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        Schedulers.runAsync(() -> {
             int changed;
             try {
                 changed = new ResourcePackGenerator().generate(assetsFolder, materials, true);
             } catch (Exception e) {
                 plugin.getLogger().log(Level.SEVERE, "Could not generate the resource pack files", e);
-                Bukkit.getScheduler().runTask(plugin, () ->
-                        sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Generating the textures failed, check the console for details.")));
                 generatingTextures.set(false);
+                Schedulers.runForSender(sender, () ->
+                        sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Generating the textures failed, check the console for details.")));
                 return;
             }
+            generatingTextures.set(false);
 
-            // Messages and commands go back on the main thread
-            Bukkit.getScheduler().runTask(plugin, () -> {
-                generatingTextures.set(false);
-                String rebuildCommand = plugin.getResourcePackRebuildCommand();
-                sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Wrote " + changed + " texture and model files. Rebuilding the resource pack with /" + rebuildCommand + "..."));
+            String rebuildCommand = plugin.getResourcePackRebuildCommand();
+            Schedulers.runForSender(sender, () -> sender.sendMessage(MiniMessage.miniMessage().deserialize(
+                    "<green>Wrote " + changed + " texture and model files. Rebuilding the resource pack with /" + rebuildCommand + "...")));
+            // Console commands run on the global thread
+            Schedulers.runGlobal(() -> {
                 plugin.debug("Running /" + rebuildCommand + " after generating textures");
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), rebuildCommand);
             });
@@ -237,7 +239,8 @@ public class CoreCommands {
     private int openForPlayer(CommandContext<CommandSourceStack> ctx, Function<Player, DynamicToolsGui> gui, String guiName) throws CommandSyntaxException {
         final PlayerSelectorArgumentResolver resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
         Player p = resolver.resolve(ctx.getSource()).getFirst();
-        openGUI(gui.apply(p).getInventory(), p);
+        // The other player can be on a different thread on Folia
+        Schedulers.runFor(p, () -> openGUI(gui.apply(p).getInventory(), p));
         ctx.getSource().getSender().sendMessage(MiniMessage.miniMessage().deserialize("<green>Opened the " + guiName + " for " + p.getName()));
         return Command.SINGLE_SUCCESS;
     }
@@ -292,7 +295,8 @@ public class CoreCommands {
         }
 
         Tool tool = new Tool(toolType,primaryMaterial,secondaryMaterial,tertiaryMaterial);
-        ItemManager.addOrDropItem(tool.getItemStack(),p);
+        // The other player can be on a different thread on Folia
+        Schedulers.runFor(p, () -> ItemManager.addOrDropItem(tool.getItemStack(),p));
         if (sender instanceof Player senderPlayer) {
             if (senderPlayer == p) {
                 sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Gave you a "+ tool.generateDisplayNameString()));
