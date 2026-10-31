@@ -3,6 +3,7 @@ package us.to.midensthings.dynamicTools;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -110,11 +111,8 @@ public final class DynamicTools extends JavaPlugin {
         materialsConf = YamlConfiguration.loadConfiguration(materialsFile);
 
         // Set custom material source
-        if (enabledCompats.contains(getConfig().getString("preferred-custom-item-plugin"))) {
-            this.customItemSource = CustomItemSource.valueOf(getConfig().getString("preferred-custom-item-plugin").toUpperCase(Locale.ROOT));
-        } else if (!enabledCompats.isEmpty()) {
-            this.customItemSource = CustomItemSource.valueOf(enabledCompats.getFirst().toUpperCase(Locale.ROOT));
-        } else {
+        this.customItemSource = chooseCustomItemSource();
+        if (customItemSource == null) {
             this.getLogger().severe("No supported custom items plugin found!");
             this.getLogger().severe("DynamicTools requires a custom items plugin to function! Shutting down...");
             pm.disablePlugin(this);
@@ -160,7 +158,47 @@ public final class DynamicTools extends JavaPlugin {
         modifierRegistry.registerModifier(new FrigidModifier());
         modifierRegistry.registerModifier(new FireproofModifier());
 
-        this.toolMaterialRegistry = new ToolMaterialRegistry();
+        this.toolMaterialRegistry = loadToolMaterials();
+
+        this.partManager = new PartManager();
+    }
+
+    /***
+     * Reloads config.yml and materials.yml and replaces the tool materials. Modifiers stay registered,
+     * and textures are not regenerated. If either file has invalid YAML, nothing is changed.
+     * @return the number of materials loaded
+     */
+    public int reloadConfigs() throws IOException, InvalidConfigurationException {
+        saveDefaultConfig();
+        if (!materialsFile.exists()) {
+            saveResource("materials.yml", false);
+        }
+
+        // Load both files before changing anything, so a typo doesn't leave the plugin with no config or materials
+        new YamlConfiguration().load(new File(getDataFolder(), "config.yml"));
+        YamlConfiguration newMaterialsConf = new YamlConfiguration();
+        newMaterialsConf.load(materialsFile);
+
+        reloadConfig();
+        materialsConf = newMaterialsConf;
+        toolMaterialRegistry = loadToolMaterials();
+        return toolMaterialRegistry.getMaterials().size();
+    }
+
+    /***
+     * @return the custom item source config.yml currently asks for, or null if none of the supported plugins are installed
+     */
+    public CustomItemSource chooseCustomItemSource() {
+        if (enabledCompats.contains(getConfig().getString("preferred-custom-item-plugin"))) {
+            return CustomItemSource.valueOf(getConfig().getString("preferred-custom-item-plugin").toUpperCase(Locale.ROOT));
+        } else if (!enabledCompats.isEmpty()) {
+            return CustomItemSource.valueOf(enabledCompats.getFirst().toUpperCase(Locale.ROOT));
+        }
+        return null;
+    }
+
+    private ToolMaterialRegistry loadToolMaterials() {
+        ToolMaterialRegistry registry = new ToolMaterialRegistry();
 
         materialsConf.getConfigurationSection("").getKeys(false).forEach(mat -> {
             List<PartType> validParts = new ArrayList<>();
@@ -224,12 +262,12 @@ public final class DynamicTools extends JavaPlugin {
                     loadMaterialColors(mat)
             );
 
-            toolMaterialRegistry.registerToolMaterial(material);
+            registry.registerToolMaterial(material);
             debug("Loaded material " + material.getId() + " with " + validParts.size() + " valid parts and " + modifiers.size() + " modifiers"
                     + (material.getColors() == null ? ", no texture colors" : ""));
         });
 
-        this.partManager = new PartManager();
+        return registry;
     }
     
     /***
@@ -257,10 +295,7 @@ public final class DynamicTools extends JavaPlugin {
         if (!getConfig().getBoolean("resource-pack.generate", true)) {
             return;
         }
-        Path assetsFolder = switch (customItemSource) {
-            case ITEMSADDER -> ItemsAdderCompat.getAssetsFolder();
-            case CRAFTENGINE -> CraftEngineCompat.getAssetsFolder();
-        };
+        Path assetsFolder = getResourcePackAssetsFolder();
         if (assetsFolder == null) {
             return;
         }
@@ -276,6 +311,26 @@ public final class DynamicTools extends JavaPlugin {
         } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Could not generate the resource pack files", e);
         }
+    }
+
+    /***
+     * @return the assets/dynamictools folder in the custom item source plugin's resource pack, or null if the plugin isn't installed
+     */
+    public Path getResourcePackAssetsFolder() {
+        return switch (customItemSource) {
+            case ITEMSADDER -> ItemsAdderCompat.getAssetsFolder();
+            case CRAFTENGINE -> CraftEngineCompat.getAssetsFolder();
+        };
+    }
+
+    /***
+     * @return the console command that makes the custom item source plugin rebuild its resource pack
+     */
+    public String getResourcePackRebuildCommand() {
+        return switch (customItemSource) {
+            case ITEMSADDER -> "iazip";
+            case CRAFTENGINE -> "ce reload all";
+        };
     }
 
     public void loadCompats() {

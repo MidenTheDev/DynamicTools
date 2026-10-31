@@ -13,6 +13,7 @@ import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -21,6 +22,7 @@ import us.to.midensthings.dynamicTools.DynamicTools;
 import us.to.midensthings.dynamicTools.gui.DynamicToolsGui;
 import us.to.midensthings.dynamicTools.gui.PartAssembler;
 import us.to.midensthings.dynamicTools.gui.PartCrafter;
+import us.to.midensthings.dynamicTools.resourcepack.ResourcePackGenerator;
 import us.to.midensthings.dynamicTools.tools.Tool;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
 import us.to.midensthings.dynamicTools.tools.ToolType;
@@ -29,11 +31,18 @@ import us.to.midensthings.dynamicTools.util.ItemManager;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
 import java.util.function.Function;
 
 public class CoreCommands {
     private final DynamicTools plugin = DynamicTools.getPlugin(DynamicTools.class);
+    // Only one texture generation at a time, they'd write to the same files
+    private static final AtomicBoolean generatingTextures = new AtomicBoolean(false);
     public LiteralCommandNode<CommandSourceStack> coreCommand = Commands.literal("dt")
             .then(Commands.literal("give").requires(source -> source.getSender().hasPermission("dynamictools.commands.give"))
                     .then(Commands.argument("toolType", StringArgumentType.word()).suggests(this::toolTypesSuggestions)
@@ -58,6 +67,10 @@ public class CoreCommands {
                                             })))
 
                             )))))
+            .then(Commands.literal("reload").requires(source -> source.getSender().hasPermission("dynamictools.commands.reload"))
+                    .executes(ctx -> reloadCommand(ctx.getSource().getSender())))
+            .then(Commands.literal("generateTextures").requires(source -> source.getSender().hasPermission("dynamictools.commands.generatetextures"))
+                    .executes(ctx -> generateTexturesCommand(ctx.getSource().getSender())))
             .then(Commands.literal("open").requires(source -> source.getSender().hasPermission("dynamictools.commands.open"))
                     .then(Commands.literal("partCrafter").executes(ctx -> openForSender(ctx, PartCrafter::new))
                             .then(Commands.argument("player",ArgumentTypes.player()).requires(source -> source.getSender().hasPermission("dynamictools.commands.open.others"))
@@ -69,6 +82,73 @@ public class CoreCommands {
             )
 
             .build();
+
+    /***
+     * Reloads config.yml and materials.yml. Textures are left alone, /dt generateTextures does those.
+     */
+    private int reloadCommand(CommandSender sender) {
+        int materialCount;
+        try {
+            materialCount = plugin.reloadConfigs();
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, "Could not reload the configs", e);
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Could not reload, config.yml or materials.yml has an error. Nothing was changed, check the console for details."));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Reloaded config.yml and materials.yml (" + materialCount + " materials)."));
+        sender.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Textures were not regenerated. Run /dt generateTextures to update the textures for new or changed materials."));
+        if (plugin.chooseCustomItemSource() != plugin.getCustomItemSource()) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>The custom item plugin can only be changed by restarting the server."));
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /***
+     * Regenerates every texture and model off the main thread, then has the custom item plugin rebuild its resource pack.
+     */
+    private int generateTexturesCommand(CommandSender sender) {
+        if (!plugin.getConfig().getBoolean("resource-pack.generate", true)) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Resource pack generation is turned off. Set resource-pack.generate to true in config.yml to use this."));
+            return Command.SINGLE_SUCCESS;
+        }
+        Path assetsFolder = plugin.getResourcePackAssetsFolder();
+        if (assetsFolder == null) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Could not find the custom item plugin's resource pack folder."));
+            return Command.SINGLE_SUCCESS;
+        }
+        if (!generatingTextures.compareAndSet(false, true)) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>The textures are already being generated."));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        // Copy the materials on the main thread so the generator doesn't read the registry while it could change
+        List<ToolMaterial> materials = new ArrayList<>(plugin.getToolMaterialRegistry().getMaterials());
+        sender.sendMessage(MiniMessage.miniMessage().deserialize("<gray>Generating textures..."));
+
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            int changed;
+            try {
+                changed = new ResourcePackGenerator().generate(assetsFolder, materials, true);
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.SEVERE, "Could not generate the resource pack files", e);
+                Bukkit.getScheduler().runTask(plugin, () ->
+                        sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Generating the textures failed, check the console for details.")));
+                generatingTextures.set(false);
+                return;
+            }
+
+            // Messages and commands go back on the main thread
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                generatingTextures.set(false);
+                String rebuildCommand = plugin.getResourcePackRebuildCommand();
+                sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Wrote " + changed + " texture and model files. Rebuilding the resource pack with /" + rebuildCommand + "..."));
+                plugin.debug("Running /" + rebuildCommand + " after generating textures");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), rebuildCommand);
+            });
+        });
+        return Command.SINGLE_SUCCESS;
+    }
 
     private void openGUI(Inventory inv, Player p) {
         p.openInventory(inv);

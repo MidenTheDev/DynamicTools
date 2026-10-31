@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
@@ -67,15 +68,26 @@ public class ResourcePackGenerator {
     private final Map<String, byte[]> files = new TreeMap<>();
 
     /***
-     * Generates every file and writes the ones that changed.
+     * Generates every file from the registered materials and writes the ones that changed.
      * @param assetsFolder the assets/dynamictools folder of the resource pack
      * @return the number of files written or deleted
      */
     public int generate(Path assetsFolder) throws IOException {
+        return generate(assetsFolder, plugin.getToolMaterialRegistry().getMaterials(), false);
+    }
+
+    /***
+     * Generates every file and writes them. Safe to run off the main thread, as long as the materials list is a copy.
+     * @param assetsFolder the assets/dynamictools folder of the resource pack
+     * @param toolMaterials the materials to generate textures for
+     * @param force write every file, even the ones that haven't changed
+     * @return the number of files written or deleted
+     */
+    public int generate(Path assetsFolder, Collection<ToolMaterial> toolMaterials, boolean force) throws IOException {
         files.clear();
 
         List<ToolMaterial> materials = new ArrayList<>();
-        for (ToolMaterial material : plugin.getToolMaterialRegistry().getMaterials()) {
+        for (ToolMaterial material : toolMaterials) {
             if (material.getColors() == null) {
                 continue;
             }
@@ -96,7 +108,7 @@ public class ResourcePackGenerator {
             }
         }
 
-        return write(assetsFolder);
+        return write(assetsFolder, force);
     }
 
     private void generatePart(PartType partType, BufferedImage baseTexture, List<ToolMaterial> materials) throws IOException {
@@ -215,9 +227,10 @@ public class ResourcePackGenerator {
 
     /***
      * Writes the generated files that changed and deletes generated files from earlier runs that aren't generated any more.
+     * @param force write every file, even the ones that haven't changed
      * @return the number of files written or deleted
      */
-    private int write(Path assetsFolder) throws IOException {
+    private int write(Path assetsFolder, boolean force) throws IOException {
         int changed = 0;
 
         for (String folder : GENERATED_FOLDERS) {
@@ -246,7 +259,7 @@ public class ResourcePackGenerator {
 
         for (Map.Entry<String, byte[]> file : files.entrySet()) {
             Path target = assetsFolder.resolve(file.getKey());
-            if (Files.isRegularFile(target) && Arrays.equals(Files.readAllBytes(target), file.getValue())) {
+            if (!force && Files.isRegularFile(target) && Arrays.equals(Files.readAllBytes(target), file.getValue())) {
                 continue;
             }
             Files.createDirectories(target.getParent());
