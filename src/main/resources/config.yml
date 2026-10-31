@@ -1,10 +1,12 @@
 config-version: '1.0'
 
 block-vanilla-tools: false
-# Whether or not to prevent the crafting of vanilla tools
+# Whether or not to prevent the crafting of vanilla tools (including netherite upgrades in the smithing table and maces).
+# Repairing vanilla tools by combining them still works.
 
 block-vanilla-armor: false
-# Whether or not to prevent the crafting of vanilla armor
+# Whether or not to prevent the crafting of vanilla armor (including netherite upgrades in the smithing table).
+# Repairing vanilla armor and armor trims still work.
 
 preferred-custom-item-plugin: ItemsAdder
 # Options: CraftEngine, ItemsAdder
@@ -15,11 +17,15 @@ resource-pack:
   # Generate part and tool textures from each material's colors and add them to the custom item plugin's resource pack.
   # If false, parts use the custom item plugin's models and tools look like vanilla tools.
 
+debug-mode: false
+# When debug mode is set to true, the plugin will log more details about its usage. This should remain FALSE for the majority of servers.
+
 part-crafter:
   share-smithing-table: true
   # Clicking on a smithing table prompts the user to choose between the vanilla GUI or the Part Crafter GUI
   replace-smithing-table: false
-  # Clicking on a smithing table opens the Part Crafter GUI
+  # Clicking on a smithing table opens the Part Crafter GUI. Takes priority over share-smithing-table.
+  # If both are false, smithing tables work like vanilla and the Part Crafter can only be opened with /dt open.
   custom-block: false
   # Inject pre-made custom block into custom item plugin
   gui:
@@ -36,7 +42,8 @@ assembler:
   share-anvil: true
   # Clicking on an anvil prompts the user to choose between the vanilla GUI or the Part Assembler GUI
   replace-anvil: false
-  # Clicking on an anvil opens the Part Crafter GUI
+  # Clicking on an anvil opens the Part Assembler GUI. Takes priority over share-anvil.
+  # If both are false, anvils work like vanilla and the Part Assembler can only be opened with /dt open.
   custom-block: false
   # Inject pre-made custom block into custom item plugin
   gui:

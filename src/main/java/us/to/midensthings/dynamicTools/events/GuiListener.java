@@ -14,6 +14,7 @@ import us.to.midensthings.dynamicTools.DynamicTools;
 import us.to.midensthings.dynamicTools.gui.DynamicToolsGui;
 import us.to.midensthings.dynamicTools.gui.PartAssembler;
 import us.to.midensthings.dynamicTools.gui.PartCrafter;
+import us.to.midensthings.dynamicTools.gui.WorkstationChooser;
 import us.to.midensthings.dynamicTools.parts.PartType;
 import us.to.midensthings.dynamicTools.tools.Tool;
 import us.to.midensthings.dynamicTools.util.ItemManager;
@@ -24,6 +25,15 @@ public class GuiListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent e) {
         Inventory top = e.getView().getTopInventory();
+        if (top.getHolder(false) instanceof WorkstationChooser chooser) {
+            e.setCancelled(true);
+            Runnable action = e.getClickedInventory() == top ? chooser.getAction(e.getSlot()) : null;
+            if (action != null) {
+                // Opening another inventory has to wait until the click is over
+                Bukkit.getScheduler().runTask(plugin, action);
+            }
+            return;
+        }
         if (!(top.getHolder(false) instanceof DynamicToolsGui gui) || !(e.getWhoClicked() instanceof Player p)) {
             return;
         }
@@ -76,6 +86,7 @@ public class GuiListener implements Listener {
         }
         assembler.consumeInputs();
         assembler.update();
+        plugin.debug(p.getName() + " assembled a " + tool.generateDisplayNameString());
     }
 
     private void takeCrafterResult(InventoryClickEvent e, Player p, PartCrafter crafter) {
@@ -92,6 +103,7 @@ public class GuiListener implements Listener {
         }
         crafter.consumeInput(partType);
         crafter.update();
+        plugin.debug(p.getName() + " crafted a " + partType.name() + " part");
     }
 
     /***
@@ -126,6 +138,10 @@ public class GuiListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onInventoryDrag(InventoryDragEvent e) {
         Inventory top = e.getView().getTopInventory();
+        if (top.getHolder(false) instanceof WorkstationChooser) {
+            e.setCancelled(true);
+            return;
+        }
         if (!(top.getHolder(false) instanceof DynamicToolsGui gui)) {
             return;
         }

@@ -11,6 +11,8 @@ import us.to.midensthings.dynamicTools.commands.DebugCommands;
 import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
 import us.to.midensthings.dynamicTools.compat.ItemsAdderCompat;
 import us.to.midensthings.dynamicTools.events.GuiListener;
+import us.to.midensthings.dynamicTools.events.VanillaRecipeListener;
+import us.to.midensthings.dynamicTools.events.WorkstationListener;
 import us.to.midensthings.dynamicTools.modifiers.Modifier;
 import us.to.midensthings.dynamicTools.modifiers.ModifierManager;
 import us.to.midensthings.dynamicTools.modifiers.ModifierRegistry;
@@ -80,6 +82,8 @@ public final class DynamicTools extends JavaPlugin {
 
         // register events
         pm.registerEvents(new GuiListener(), this);
+        pm.registerEvents(new VanillaRecipeListener(), this);
+        pm.registerEvents(new WorkstationListener(), this);
 
         registerCommands();
     }
@@ -221,6 +225,8 @@ public final class DynamicTools extends JavaPlugin {
             );
 
             toolMaterialRegistry.registerToolMaterial(material);
+            debug("Loaded material " + material.getId() + " with " + validParts.size() + " valid parts and " + modifiers.size() + " modifiers"
+                    + (material.getColors() == null ? ", no texture colors" : ""));
         });
 
         this.partManager = new PartManager();
@@ -262,6 +268,7 @@ public final class DynamicTools extends JavaPlugin {
         getLogger().info("Generating resource pack files");
         try {
             int changed = new ResourcePackGenerator().generate(assetsFolder);
+            debug(changed + " resource pack files changed in " + assetsFolder);
             if (changed > 0) {
                 getLogger().info("Updated " + changed + " resource pack files in " + assetsFolder
                         + (customItemSource == CustomItemSource.ITEMSADDER ? ". Run /iazip if ItemsAdder has already built its pack." : ". Run /ce reload all if CraftEngine has already built its pack."));
@@ -287,6 +294,15 @@ public final class DynamicTools extends JavaPlugin {
         }
         
         // Load other compats after checking for a valid custom item plugin first
+    }
+
+    /***
+     * Logs a message if debug-mode is on in config.yml.
+     */
+    public void debug(String message) {
+        if (getConfig().getBoolean("debug-mode", false)) {
+            getLogger().info("[Debug] " + message);
+        }
     }
 
     public ToolMaterialRegistry getToolMaterialRegistry() {
