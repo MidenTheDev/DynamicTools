@@ -17,9 +17,7 @@ import us.to.midensthings.dynamicTools.events.WorkstationListener;
 import us.to.midensthings.dynamicTools.modifiers.Modifier;
 import us.to.midensthings.dynamicTools.modifiers.ModifierManager;
 import us.to.midensthings.dynamicTools.modifiers.ModifierRegistry;
-import us.to.midensthings.dynamicTools.modifiers.builtin.FireproofModifier;
-import us.to.midensthings.dynamicTools.modifiers.builtin.FrigidModifier;
-import us.to.midensthings.dynamicTools.modifiers.builtin.ReinforcedModifier;
+import us.to.midensthings.dynamicTools.modifiers.builtin.*;
 import us.to.midensthings.dynamicTools.parts.PartType;
 import us.to.midensthings.dynamicTools.resourcepack.ResourcePackGenerator;
 import us.to.midensthings.dynamicTools.tools.MaterialColors;
@@ -157,6 +155,15 @@ public final class DynamicTools extends JavaPlugin {
         modifierRegistry.registerModifier(new ReinforcedModifier());
         modifierRegistry.registerModifier(new FrigidModifier());
         modifierRegistry.registerModifier(new FireproofModifier());
+        modifierRegistry.registerModifier(new BouncyModifier());
+        modifierRegistry.registerModifier(new HasteModifier());
+        modifierRegistry.registerModifier(new HeavyModifier());
+        modifierRegistry.registerModifier(new SharpModifier());
+        modifierRegistry.registerModifier(new PoisonousModifier());
+        modifierRegistry.registerModifier(new SusModifier());
+        modifierRegistry.registerModifier(new WitheringModifier());
+        modifierRegistry.registerModifier(new BeheadingModifier());
+        modifierRegistry.registerModifier(new LifestealModifier());
 
         this.toolMaterialRegistry = loadToolMaterials();
 
@@ -182,6 +189,9 @@ public final class DynamicTools extends JavaPlugin {
         reloadConfig();
         materialsConf = newMaterialsConf;
         toolMaterialRegistry = loadToolMaterials();
+        if (modifierRegistry.getModifier("beheading") instanceof BeheadingModifier beheading) {
+            beheading.loadHeads();
+        }
         return toolMaterialRegistry.getMaterials().size();
     }
 

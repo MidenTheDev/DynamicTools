@@ -7,12 +7,13 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import us.to.midensthings.dynamicTools.modifiers.EventModifier;
 import us.to.midensthings.dynamicTools.tools.ToolType;
+import us.to.midensthings.dynamicTools.util.TypeSets;
 
 import java.util.EnumSet;
 import java.util.Set;
 
 /***
- * Slows down enemies hit with the tool. Each level adds 2 seconds and one level of Slowness.
+ * Applies the slowness effect to enemies hit. Levels above 1 increase duration and amplifier (max 2)
  */
 public class FrigidModifier implements EventModifier {
 
@@ -28,7 +29,7 @@ public class FrigidModifier implements EventModifier {
 
     @Override
     public Set<ToolType> getValidToolTypes() {
-        return EnumSet.of(ToolType.SWORD, ToolType.AXE, ToolType.MACE, ToolType.SPEAR);
+        return TypeSets.onlyWeapons;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -40,6 +41,8 @@ public class FrigidModifier implements EventModifier {
         if (level <= 0) {
             return;
         }
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40 * level, level - 1));
+        int amplifier = 0;
+        if (level > 1) amplifier = 1;
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 40 * level, amplifier));
     }
 }

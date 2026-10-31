@@ -8,6 +8,7 @@ import io.papermc.paper.registry.keys.tags.DamageTypeTagKeys;
 import org.bukkit.inventory.ItemStack;
 import us.to.midensthings.dynamicTools.modifiers.Modifier;
 import us.to.midensthings.dynamicTools.tools.ToolType;
+import us.to.midensthings.dynamicTools.util.TypeSets;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -29,7 +30,7 @@ public class FireproofModifier implements Modifier {
 
     @Override
     public Set<ToolType> getValidToolTypes() {
-        return EnumSet.allOf(ToolType.class);
+        return TypeSets.all;
     }
 
     @Override

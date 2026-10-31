@@ -1,0 +1,183 @@
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not
+# distributed with this file, You can obtain one at https://mozilla.org/MPL/2.0/.
+#
+# The head textures below come from PlayerHeads (https://github.com/crashdemons/PlayerHeads) by crashdemons and its
+# contributors, with the textures found by MagmaVoid_. Taken from PlayerHeads-core TexturedSkullType.java at commit
+# 81e208a3580136d74f04d0736d5770e39c0220c4. This file is under the MPL 2.0, separately from the rest of DynamicTools.
+#
+# Heads dropped by the Beheading modifier for mobs that don't have a vanilla head.
+# Zombies, skeletons, wither skeletons, creepers, piglins, the ender dragon and players already drop their vanilla heads
+# and don't need an entry here. Mobs without a vanilla head or an entry here don't drop anything.
+#
+# Each entry is an entity type, as used in /summon (e.g. cow, iron_golem), with:
+#   texture: the head's skin. Either the texture ID (the long hex string at the end of a textures.minecraft.net URL)
+#            or the full base64 "Value" that head websites give you.
+#   name: (optional) the head's name, MiniMessage formatting is supported. Defaults to "<mob name> Head".
+#
+# Textures can be found on head websites such as https://minecraft-heads.com. Check the website's terms before
+# copying heads from it.
+heads:
+  allay:
+    texture: "40e1c7064af7dee68677efaa95f6e6e01430b006dd91638ea2a61849254488ec"
+  armadillo:
+    texture: "c9c1e96ce985725e22ed6ccf0f4c4810c729a2538b97bda06faeb3b92799c878"
+  axolotl:
+    texture: "e8a8a2d7ccf0c3746e23ab5491070e0923f05b235f9a2f5d53d384353853bddc"
+  bat:
+    texture: "fb2d777922fee86588938e3193cf3f454ccf889fd31172b4f8c15be49f43388"
+  bee:
+    texture: "59ac16f296b461d05ea0785d477033e527358b4f30c266aa02f020157ffca736"
+  blaze:
+    texture: "f30c14d1aadffe8d92f9bd8f938e220a15321ec5f39343d5f61e670aa7958631"
+  bogged:
+    texture: "a3b9003ba2d05562c75119b8a62185c67130e9282f7acbac4bc2824c21eb95d9"
+  breeze:
+    texture: "cd6e602f76f80c0657b5aed64e267eeea702b31e6dae86346c8506f2535ced02"
+  camel:
+    texture: "a1091ce6e559c26be77ee60456b62122990f9519f514b11df3564149c2729d05"
+  camel_husk:
+    texture: "3bd7a92a6f67b7500d16c4e12f28058ec2859311556ba03be2d1f581170f2db6"
+  cat:
+    texture: "45f47cd820b1974da66cdf90beb79820eca9f4cbe021b1783a30b75025d1"
+  cave_spider:
+    texture: "41645dfd77d09923107b3496e94eeb5c30329f97efc96ed76e226e98224"
+  chicken:
+    texture: "1638469a599ceef7207537603248a9ab11ff591fd378bea4735b346a7fae893"
+  cod:
+    texture: "7892d7dd6aadf35f86da27fb63da4edda211df96d2829f691462a4fb1cab0"
+  copper_golem:
+    texture: "99e24e94dbe42e230d83293a77d61ff7101a8c68ab68bbc6a93f9630fb2fdb4"
+  cow:
+    texture: "5d6c6eda942f7f5f71c3161c7306f4aed307d82895f9d2b07ab4525718edc5"
+  creaking:
+    texture: "a575bac234cf86b124d3cc870bd6b737d27679673a616faf2e996f9949c6153f"
+  dolphin:
+    texture: "8e9688b950d880b55b7aa2cfcd76e5a0fa94aac6d16f78e833f7443ea29fed3"
+  donkey:
+    texture: "63a976c047f412ebc5cb197131ebef30c004c0faf49d8dd4105fca1207edaff3"
+  drowned:
+    texture: "c3f7ccf61dbc3f9fe9a6333cde0c0e14399eb2eea71d34cf223b3ace22051"
+  elder_guardian:
+    texture: "1c797482a14bfcb877257cb2cff1b6e6a8b8413336ffb4c29a6139278b436b"
+  enderman:
+    texture: "7a59bb0a7a32965b3d90d8eafa899d1835f424509eadd4e6b709ada50b9cf"
+  endermite:
+    texture: "5bc7b9d36fb92b6bf292be73d32c6c5b0ecc25b44323a541fae1f1e67e393a3e"
+  evoker:
+    texture: "3433322e2ccbd9c55ef41d96f38dbc666c803045b24391ac9391dccad7cd"
+  fox:
+    texture: "16db7d507389a14bbec39de6922165b32d43657bcb6aaf4b5182825b22b4"
+  frog:
+    texture: "c283412169d1dbd15032c11c5a225cd11be3875d612dad818d1d6fccfcb9bfa"
+  ghast:
+    texture: "8b6a72138d69fbbd2fea3fa251cabd87152e4f1c97e5f986bf685571db3cc0"
+  glow_squid:
+    texture: "2ecd0b5eb6b384db076d8446065202959dddff0161e0d723b3df0cc586d16bbd"
+  goat:
+    texture: "957607099d06b7a8b1327093cd0a488be7c9f50b6121b22151271b59170f3c21"
+  guardian:
+    texture: "a0bf34a71e7715b6ba52d5dd1bae5cb85f773dc9b0d457b4bfc5f9dd3cc7c94"
+  happy_ghast:
+    texture: "a1a36cb93d01675c4622dd5c8d872110911ec12c372e89afa8ba03862867f6fb"
+  hoglin:
+    texture: "9bb9bc0f01dbd762a08d9e77c08069ed7c95364aa30ca1072208561b730e8d75"
+  horse:
+    texture: "7bb4b288991efb8ca0743beccef31258b31d39f24951efb1c9c18a417ba48f9"
+  husk:
+    texture: "d674c63c8db5f4ca628d69a3b1f8a36e29d8fd775e1a6bdb6cabb4be4db121"
+  illusioner:
+    texture: "512512e7d016a2343a7bff1a4cd15357ab851579f1389bd4e3a24cbeb88b"
+  iron_golem:
+    texture: "89091d79ea0f59ef7ef94d7bba6e5f17f2f7d4572c44f90f76c4819a714"
+  llama:
+    texture: "c2b1ecff77ffe3b503c30a548eb23a1a08fa26fd67cdff389855d74921368"
+  magma_cube:
+    texture: "38957d5023c937c4c41aa2412d43410bda23cf79a9f6ab36b76fef2d7c429"
+  mooshroom:
+    texture: "d0bc61b9757a7b83e03cd2507a2157913c2cf016e7c096a4d6cf1fe1b8db"
+  mule:
+    texture: "a0486a742e7dda0bae61ce2f55fa13527f1c3b334c57c034bb4cf132fb5f5f"
+  nautilus:
+    texture: "b53d63eb175b00fb35285f4330d0be68a0713db94e00e6fdd85832d41e3a08b"
+  ocelot:
+    texture: "5657cd5c2989ff97570fec4ddcdc6926a68a3393250c1be1f0b114a1db1"
+  panda:
+    texture: "dca096eea506301bea6d4b17ee1605625a6f5082c71f74a639cc940439f47166"
+  parched:
+    texture: "24aeceff5f26dd8413c5c03547c234ac03108d187af0b9cd834a8ce12598591c"
+  parrot:
+    texture: "2b94f236c4a642eb2bcdc3589b9c3c4a0b5bd5df9cd5d68f37f8c83f8e3f1"
+  phantom:
+    texture: "746830da5f83a3aaed838a99156ad781a789cfcf13e25beef7f54a86e4fa4"
+  pig:
+    texture: "621668ef7cb79dd9c22ce3d1f3f4cb6e2559893b6df4a469514e667c16aa4"
+  piglin_brute:
+    texture: "3e300e9027349c4907497438bac29e3a4c87a848c50b34c21242727b57f4e1cf"
+  pillager:
+    texture: "6deaec344ab095b48cead7527f7dee61b063ff791f76a8fa76642c8676e2173"
+  polar_bear:
+    texture: "cd5d60a4d70ec136a658507ce82e3443cdaa3958d7fca3d9376517c7db4e695d"
+  pufferfish:
+    texture: "17152876bc3a96dd2a2299245edb3beef647c8a56ac8853a687c3e7b5d8bb"
+  rabbit:
+    texture: "7d1169b2694a6aba826360992365bcda5a10c89a3aa2b48c438531dd8685c3a7"
+  ravager:
+    texture: "3b62501cd1b87b37f628018210ec5400cb65a4d1aab74e6a3f7f62aa85db97ee"
+  salmon:
+    texture: "8aeb21a25e46806ce8537fbd6668281cf176ceafe95af90e94a5fd84924878"
+  sheep:
+    texture: "f31f9ccc6b3e32ecf13b8a11ac29cd33d18c95fc73db8a66c5d657ccb8be70"
+  shulker:
+    texture: "b1d3534d21fe8499262de87affbeac4d25ffde35c8bdca069e61e1787ff2f"
+  silverfish:
+    texture: "da91dab8391af5fda54acd2c0b18fbd819b865e1a8f1d623813fa761e924540"
+  skeleton_horse:
+    texture: "47effce35132c86ff72bcae77dfbb1d22587e94df3cbc2570ed17cf8973a"
+  slime:
+    texture: "895aeec6b842ada8669f846d65bc49762597824ab944f22f45bf3bbb941abe6c"
+  sniffer:
+    texture: "43f3be09a7353eeae94d88320cb5b242de2f719c0e5c16a486327c605db1d463"
+  snow_golem:
+    texture: "1fdfd1f7538c040258be7a91446da89ed845cc5ef728eb5e690543378fcf4"
+  spider:
+    texture: "cd541541daaff50896cd258bdbdd4cf80c3ba816735726078bfe393927e57f1"
+  squid:
+    texture: "01433be242366af126da434b8735df1eb5b3cb2cede39145974e9c483607bac"
+  stray:
+    texture: "78ddf76e555dd5c4aa8a0a5fc584520cd63d489c253de969f7f22f85a9a2d56"
+  strider:
+    texture: "18a9adf780ec7dd4625c9c0779052e6a15a451866623511e4c82e9655714b3c1"
+  tadpole:
+    texture: "c52a4d788a29542863ac1cb828d11211f6d123c6ec046098a65381e2c37c37e0"
+  trader_llama:
+    texture: "e89a2eb17705fe7154ab041e5c76a08d41546a31ba20ea3060e3ec8edc10412c"
+  tropical_fish:
+    texture: "40cd71fbbbbb66c7baf7881f415c64fa84f6504958a57ccdb8589252647ea"
+  turtle:
+    texture: "0a4050e7aacc4539202658fdc339dd182d7e322f9fbcc4d5f99b5718a"
+  vex:
+    texture: "c2ec5a516617ff1573cd2f9d5f3969f56d5575c4ff4efefabd2a18dc7ab98cd"
+  villager:
+    texture: "41b830eb4082acec836bc835e40a11282bb51193315f91184337e8d3555583"
+  vindicator:
+    texture: "9e1cab382458e843ac4356e3e00e1d35c36f449fa1a84488ab2c6557b392d"
+  wandering_trader:
+    texture: "5f1379a82290d7abe1efaabbc70710ff2ec02dd34ade386bc00c930c461cf932"
+  warden:
+    texture: "75b26ca8d2538f7f6df08c81f0adb83058016fb4193b9aa53fd04b412000afd2"
+  witch:
+    texture: "20e13d18474fc94ed55aeb7069566e4687d773dac16f4c3f8722fc95bf9f2dfa"
+  wither:
+    texture: "3e4f49535a276aacc4dc84133bfe81be5f2a4799a4c04d9a4ddb72d819ec2b2b"
+  wolf:
+    texture: "24d7727f52354d24a64bd6602a0ce71a7b484d05963da83b470360faa9ceab5f"
+  zoglin:
+    texture: "e67e18602e03035ad68967ce090235d8996663fb9ea47578d3a7ebbc42a5ccf9"
+  zombie_horse:
+    texture: "d22950f2d3efddb18de86f8f55ac518dce73f12a6e0f8636d551d8eb480ceec"
+  zombie_nautilus:
+    texture: "fd9a933376da44c3391307cb9f4cf03f16f3a54f495fd5a11bad8a373f9d5720"
+  zombie_villager:
+    texture: "e5e08a8776c1764c3fe6a6ddd412dfcb87f41331dad479ac96c21df4bf3ac89c"
+  zombified_piglin:
+    texture: "e935842af769380f78e8b8a88d1ea6ca2807c1e5693c2cf797456620833e936f"

@@ -96,7 +96,7 @@ public class CoreCommands {
             return Command.SINGLE_SUCCESS;
         }
 
-        sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Reloaded config.yml and materials.yml (" + materialCount + " materials)."));
+        sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Reloaded config.yml, materials.yml and mob-heads.yml (" + materialCount + " materials)."));
         sender.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>Textures were not regenerated. Run /dt generateTextures to update the textures for new or changed materials."));
         if (plugin.chooseCustomItemSource() != plugin.getCustomItemSource()) {
             sender.sendMessage(MiniMessage.miniMessage().deserialize("<yellow>The custom item plugin can only be changed by restarting the server."));
