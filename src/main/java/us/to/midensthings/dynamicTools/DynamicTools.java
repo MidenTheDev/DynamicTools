@@ -7,6 +7,7 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import us.to.midensthings.dynamicTools.addons.AddonLoader;
 import us.to.midensthings.dynamicTools.commands.CoreCommands;
 import us.to.midensthings.dynamicTools.commands.DebugCommands;
 import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
@@ -46,6 +47,7 @@ public final class DynamicTools extends JavaPlugin {
     private PartManager partManager;
     private ModifierRegistry modifierRegistry;
     private ModifierManager modifierManager;
+    private AddonLoader addonLoader;
     
     private PluginManager pm;
     private CustomItemSource customItemSource;
@@ -144,6 +146,9 @@ public final class DynamicTools extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        if (addonLoader != null) {
+            addonLoader.disableAddons();
+        }
     }
 
     public void initializeRegistries() {
@@ -164,6 +169,10 @@ public final class DynamicTools extends JavaPlugin {
         modifierRegistry.registerModifier(new WitheringModifier());
         modifierRegistry.registerModifier(new BeheadingModifier());
         modifierRegistry.registerModifier(new LifestealModifier());
+
+        // Addons register their modifiers in onLoad, which also has to happen before the materials are loaded
+        this.addonLoader = new AddonLoader();
+        addonLoader.loadAddons();
 
         this.toolMaterialRegistry = loadToolMaterials();
 
@@ -384,6 +393,10 @@ public final class DynamicTools extends JavaPlugin {
 
     public ModifierManager getModifierManager() {
         return modifierManager;
+    }
+
+    public AddonLoader getAddonLoader() {
+        return addonLoader;
     }
     
     public List<String> getEnabledCompats() {
