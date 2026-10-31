@@ -40,6 +40,7 @@ public class ToolMaterial {
 
     private double armorToughness;
     private double armorToughnessMultiplier;
+    private double armorDurability;
 
     private int miningLevel;
 
@@ -61,7 +62,7 @@ public class ToolMaterial {
 
 
 
-    public ToolMaterial(String id, double durability, double durabilityMultiplier, double attackDamage, double attackDamageMultiplier, double attackSpeed, double attackSpeedMultiplier, double digSpeed, double digSpeedMultiplier, double armor, double armorMultiplier, double armorToughness, double armorToughnessMultiplier, int miningLevel, String displayName, List<PartType> validParts, List<String> validInputMaterials, Map<Modifier,Integer> modifiers, MaterialColors colors) {
+    public ToolMaterial(String id, double durability, double durabilityMultiplier, double attackDamage, double attackDamageMultiplier, double attackSpeed, double attackSpeedMultiplier, double digSpeed, double digSpeedMultiplier, double armor, double armorMultiplier, double armorToughness, double armorToughnessMultiplier, double armorDurability, int miningLevel, String displayName, List<PartType> validParts, List<String> validInputMaterials, Map<Modifier,Integer> modifiers, MaterialColors colors) {
         this.id = id;
         this.durability = durability;
         this.durabilityMultiplier = durabilityMultiplier;
@@ -75,6 +76,7 @@ public class ToolMaterial {
         this.armorMultiplier = armorMultiplier;
         this.armorToughness = armorToughness;
         this.armorToughnessMultiplier = armorToughnessMultiplier;
+        this.armorDurability = armorDurability;
         this.miningLevel = miningLevel;
         this.displayName = displayName;
         this.validParts = validParts;
@@ -224,6 +226,13 @@ public class ToolMaterial {
 
     public double getArmorToughnessMultiplier() {
         return armorToughnessMultiplier;
+    }
+
+    /***
+     * @return the material's durability for armor. Uses the durability multiplier like tool durability does.
+     */
+    public double getArmorDurability() {
+        return armorDurability;
     }
 
     public int getMiningLevel() {

@@ -5,6 +5,9 @@
 #   If an item is an input for more than one material, the material listed first in this file is used.
 # colors: (optional) hex colors the part textures are recolored with. The darkest pixels become dark, the highlights light.
 #   Materials without colors use the uncolored base textures.
+# stats.armorDurability: the durability of armor made with this material, separate from tool durability.
+#   Use vanilla's armor durability multipliers to match vanilla armor: leather 5, gold 7, copper 11, iron/chainmail 15,
+#   diamond 33, netherite 37. Defaults to 15. Armor also uses the durability multiplier.
 # modifiers: (optional) the modifiers tools made with this material get, as modifier ID: level
 #   Each modifier only applies to the tool types it supports (e.g. frigid only goes on weapons), so a material can list
 #   separate modifiers for different kinds of tools.
@@ -85,6 +88,7 @@ copper:
     attackSpeed: 0.8
     digSpeed: 2.5
     armor: 1
+    armorDurability: 11
     miningLevel: 2
   multipliers:
     durability: 1.0
@@ -109,6 +113,7 @@ iron:
     attackSpeed: 0.8
     digSpeed: 3
     armor: 2
+    armorDurability: 15
     armorToughness: 0.5
     miningLevel: 3
   multipliers:
@@ -136,6 +141,7 @@ gold:
     attackSpeed: 0.8
     digSpeed: 4
     armor: 1
+    armorDurability: 7
     miningLevel: 2
   multipliers:
     durability: 0.5
@@ -159,6 +165,7 @@ diamond:
     attackSpeed: 0.8
     digSpeed: 4
     armor: 3
+    armorDurability: 33
     armorToughness: 1.0
     miningLevel: 4
   multipliers:
@@ -183,6 +190,7 @@ netherite:
     attackSpeed: 0.8
     digSpeed: 4.5
     armor: 3
+    armorDurability: 37
     armorToughness: 2.0
     miningLevel: 4
   multipliers:
@@ -202,6 +210,7 @@ iron_chain:
     - "minecraft:iron_chain"
   stats:
     armor: 1
+    armorDurability: 15
     armorToughness: 0
   multipliers:
     armor: 1.0

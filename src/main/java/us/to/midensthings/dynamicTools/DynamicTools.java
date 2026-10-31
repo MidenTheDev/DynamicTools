@@ -283,6 +283,8 @@ public final class DynamicTools extends JavaPlugin {
                     materialsConf.getDouble(mat+".multipliers.armor",1.0),
                     materialsConf.getDouble(mat+".stats.armorToughness"),
                     materialsConf.getDouble(mat+".multipliers.armorToughness",1.0),
+                    // Vanilla armor durability multipliers: leather 5, gold 7, copper 11, iron/chainmail 15, diamond 33, netherite 37
+                    materialsConf.getDouble(mat+".stats.armorDurability",15),
                     materialsConf.getInt(mat+".stats.miningLevel"),
                     materialsConf.getString(mat+".display-name"),
                     validParts,

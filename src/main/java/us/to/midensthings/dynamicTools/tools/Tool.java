@@ -105,17 +105,31 @@ public class Tool {
         }
         Material baseMaterial;
 
+        if (toolType.isArmor()) {
+            // Armor uses the vanilla armor of the frame's tier, which sets its equip sound and enchantability
+            String armorMaterialType;
+            if (miningLevel >= 4) {
+                armorMaterialType = "DIAMOND_";
+            } else {
+                switch (miningLevel) {
+                    case 2 -> armorMaterialType = "CHAINMAIL_";
+                    case 3 -> armorMaterialType = "IRON_";
+                    default -> armorMaterialType = "LEATHER_";
+                }
+            }
+            baseMaterial = Material.valueOf(armorMaterialType + toolType.name());
+        } else {
+            switch (toolType) {
+                case AXE -> baseMaterial = Material.valueOf(baseMaterialType+"AXE");
+                case MACE -> baseMaterial = Material.MACE;
+                case SPEAR -> baseMaterial = Material.valueOf(baseMaterialType+"SPEAR");
+                case SWORD -> baseMaterial = Material.valueOf(baseMaterialType+"SWORD");
 
-        switch (toolType) {
-            case AXE -> baseMaterial = Material.valueOf(baseMaterialType+"AXE");
-            case MACE -> baseMaterial = Material.MACE;
-            case SPEAR -> baseMaterial = Material.valueOf(baseMaterialType+"SPEAR");
-            case SWORD -> baseMaterial = Material.valueOf(baseMaterialType+"SWORD");
 
-
-            case SHOVEL -> baseMaterial = Material.valueOf(baseMaterialType+"SHOVEL");
-            case PICKAXE -> baseMaterial = Material.valueOf(baseMaterialType+"PICKAXE");
-            default -> baseMaterial = Material.valueOf(baseMaterialType+"HOE");
+                case SHOVEL -> baseMaterial = Material.valueOf(baseMaterialType+"SHOVEL");
+                case PICKAXE -> baseMaterial = Material.valueOf(baseMaterialType+"PICKAXE");
+                default -> baseMaterial = Material.valueOf(baseMaterialType+"HOE");
+            }
         }
         this.item = ItemStack.of(baseMaterial);
         item.editPersistentDataContainer(pdc -> {
@@ -157,12 +171,29 @@ public class Tool {
         double digSpeedStat = (primaryMaterial.getDigSpeed() + (0.5 * secondaryMaterial.getDigSpeed()) + (0.5 * tertiaryMaterial.getDigSpeed())) *
                 ((primaryMaterial.getDigSpeedMultiplier() + secondaryMaterial.getDigSpeedMultiplier() + tertiaryMaterial.getDigSpeedMultiplier()) / 3);
 
+        /*
+        Armor formulas, same weighting as the tool stats
+        Armor: Armor Type Modifier X (Frame Armor + 1/2 core Armor + 1/2 binding Armor) X (Mean armor multiplier across all parts)
+        Toughness: (Frame Toughness + 1/2 core Toughness + 1/2 binding Toughness) X (Mean toughness multiplier across all parts)
+        Durability: Armor Type Durability Modifier X (Frame + 1/2 core + 1/2 binding armor durability) X (Mean durability multiplier across all parts)
+         */
+        double armorStat = toolType.getArmorMod() * ((primaryMaterial.getArmor() + (0.5 * secondaryMaterial.getArmor()) + (0.5 * tertiaryMaterial.getArmor())) *
+                ((primaryMaterial.getArmorMultiplier() + secondaryMaterial.getArmorMultiplier() + tertiaryMaterial.getArmorMultiplier()) / 3));
+        double armorToughnessStat = (primaryMaterial.getArmorToughness() + (0.5 * secondaryMaterial.getArmorToughness()) + (0.5 * tertiaryMaterial.getArmorToughness())) *
+                ((primaryMaterial.getArmorToughnessMultiplier() + secondaryMaterial.getArmorToughnessMultiplier() + tertiaryMaterial.getArmorToughnessMultiplier()) / 3);
+        double armorDurabilityStat = toolType.getArmorDurabilityMod() * ((primaryMaterial.getArmorDurability() + (0.5 * secondaryMaterial.getArmorDurability()) + (0.5 * tertiaryMaterial.getArmorDurability())) *
+                ((primaryMaterial.getDurabilityMultiplier() + secondaryMaterial.getDurabilityMultiplier() + tertiaryMaterial.getDurabilityMultiplier()) / 3));
+
         // Apply modifiers to the stats from the materials
         this.modifiers = collectModifiers(toolType, primaryMaterial, secondaryMaterial, tertiaryMaterial);
         this.bonusModifiers = new LinkedHashMap<>(bonusModifiers);
         bonusModifiers.forEach((modifier, level) -> modifiers.merge(modifier, level, Integer::sum));
         plugin.getModifierManager().setBonusModifiers(item, this.bonusModifiers);
-        ToolStats stats = new ToolStats(damageStat, speedStat, durabilityStat, digSpeedStat);
+        ToolStats stats = new ToolStats(damageStat, speedStat, toolType.isArmor() ? armorDurabilityStat : durabilityStat, digSpeedStat);
+        if (toolType.isArmor()) {
+            stats.setArmor(armorStat);
+            stats.setArmorToughness(armorToughnessStat);
+        }
         modifiers.forEach((modifier, level) -> {
             if (modifier instanceof StatModifier statModifier) {
                 statModifier.apply(stats, level);
@@ -170,18 +201,29 @@ public class Tool {
         });
         plugin.getModifierManager().setModifiers(item, modifiers);
 
-        ItemAttributeModifiers.Builder mods = ItemAttributeModifiers.itemAttributes()
-                .addModifier(Attribute.ATTACK_DAMAGE,
-                        new AttributeModifier(NamespacedKey.minecraft("base_attack_damage"), stats.getAttackDamage() - 1.0,
-                                AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND))
-                .addModifier(Attribute.ATTACK_SPEED,
-                        new AttributeModifier(NamespacedKey.minecraft("base_attack_speed"), stats.getAttackSpeed() - 4.0,
-                                AttributeModifier.Operation.ADD_NUMBER, EquipmentSlotGroup.MAINHAND));
+        EquipmentSlotGroup attributeSlot = toolType.getAttributeSlot();
+        ItemAttributeModifiers.Builder mods = ItemAttributeModifiers.itemAttributes();
+        if (toolType.isArmor()) {
+            // Same keys vanilla armor uses, e.g. minecraft:armor.helmet
+            NamespacedKey armorKey = NamespacedKey.minecraft("armor." + toolType.name().toLowerCase(Locale.ROOT));
+            mods.addModifier(Attribute.ARMOR, new AttributeModifier(armorKey, stats.getArmor(), AttributeModifier.Operation.ADD_NUMBER, attributeSlot));
+            if (stats.getArmorToughness() > 0) {
+                mods.addModifier(Attribute.ARMOR_TOUGHNESS, new AttributeModifier(armorKey, stats.getArmorToughness(),
+                        AttributeModifier.Operation.ADD_NUMBER, attributeSlot));
+            }
+        } else {
+            mods.addModifier(Attribute.ATTACK_DAMAGE,
+                            new AttributeModifier(NamespacedKey.minecraft("base_attack_damage"), stats.getAttackDamage() - 1.0,
+                                    AttributeModifier.Operation.ADD_NUMBER, attributeSlot))
+                    .addModifier(Attribute.ATTACK_SPEED,
+                            new AttributeModifier(NamespacedKey.minecraft("base_attack_speed"), stats.getAttackSpeed() - 4.0,
+                                    AttributeModifier.Operation.ADD_NUMBER, attributeSlot));
+        }
         List<ToolStats.ExtraAttribute> extraAttributes = stats.getExtraAttributes();
         for (int i = 0; i < extraAttributes.size(); i++) {
             ToolStats.ExtraAttribute extra = extraAttributes.get(i);
             mods.addModifier(extra.attribute(), new AttributeModifier(new NamespacedKey(plugin, "tool_modifier_" + i), extra.amount(),
-                    extra.operation(), EquipmentSlotGroup.MAINHAND));
+                    extra.operation(), attributeSlot));
         }
         item.setData(DataComponentTypes.ATTRIBUTE_MODIFIERS, mods.build());
 
@@ -217,9 +259,17 @@ public class Tool {
         List<Component> lore = new ArrayList<>();
         modifiers.forEach((modifier, level) -> lore.add(modifierLine(modifier, level)));
         lore.add(Component.empty());
-        lore.add(Component.translatable("item.modifiers.mainhand", NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
-        lore.add(statLine(stats.getAttackDamage(), Component.translatable(Attribute.ATTACK_DAMAGE)));
-        lore.add(statLine(stats.getAttackSpeed(), Component.translatable(Attribute.ATTACK_SPEED)));
+        lore.add(Component.translatable(getSlotTranslationKey(toolType), NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+        if (toolType.isArmor()) {
+            // Vanilla shows armor as blue "+3 Armor" lines rather than green base stats
+            lore.add(extraAttributeLine(new ToolStats.ExtraAttribute(Attribute.ARMOR, stats.getArmor(), AttributeModifier.Operation.ADD_NUMBER)));
+            if (stats.getArmorToughness() > 0) {
+                lore.add(extraAttributeLine(new ToolStats.ExtraAttribute(Attribute.ARMOR_TOUGHNESS, stats.getArmorToughness(), AttributeModifier.Operation.ADD_NUMBER)));
+            }
+        } else {
+            lore.add(statLine(stats.getAttackDamage(), Component.translatable(Attribute.ATTACK_DAMAGE)));
+            lore.add(statLine(stats.getAttackSpeed(), Component.translatable(Attribute.ATTACK_SPEED)));
+        }
         if (toolType.isMiningTool()) {
             lore.add(statLine(digSpeedStat, Component.text("Mining Speed")));
         }
@@ -234,6 +284,21 @@ public class Tool {
         ResourcePackGenerator.applyToolModel(item, toolType, primaryMaterial, secondaryMaterial, tertiaryMaterial);
 
         modifiers.forEach((modifier, level) -> modifier.applyToItem(item, level));
+    }
+
+    /***
+     * @return the translation key of vanilla's "When in Main Hand:" / "When on Head:" line for the tool type
+     */
+    private static String getSlotTranslationKey(ToolType toolType) {
+        if (!toolType.isArmor()) {
+            return "item.modifiers.mainhand";
+        }
+        return switch (toolType.getArmorSlot()) {
+            case HEAD -> "item.modifiers.head";
+            case CHEST -> "item.modifiers.chest";
+            case LEGS -> "item.modifiers.legs";
+            default -> "item.modifiers.feet";
+        };
     }
 
     /***

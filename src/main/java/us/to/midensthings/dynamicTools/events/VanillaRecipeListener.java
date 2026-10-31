@@ -28,6 +28,7 @@ import org.bukkit.inventory.FurnaceInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.SmithingTransformRecipe;
+import org.bukkit.inventory.SmithingTrimRecipe;
 import us.to.midensthings.dynamicTools.DynamicTools;
 import us.to.midensthings.dynamicTools.tools.ToolItems;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
@@ -231,9 +232,12 @@ public class VanillaRecipeListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onPrepareSmithing(PrepareSmithingEvent e) {
-        // Upgrades would turn the tool into a different vanilla item, e.g. a diamond based tool into a netherite pickaxe
+        // Upgrades would turn the tool into a different vanilla item, e.g. a diamond based tool into a netherite pickaxe.
+        // Armor trims only add the trim to the armor, so they're allowed.
         if (containsDynamicToolsItem(e.getInventory().getContents())) {
-            e.setResult(null);
+            if (!(e.getInventory().getRecipe() instanceof SmithingTrimRecipe)) {
+                e.setResult(null);
+            }
             return;
         }
         // Netherite upgrades make new vanilla tools and armor, armor trims don't

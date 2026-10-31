@@ -12,7 +12,8 @@ import java.util.List;
 public class ToolStats {
 
     /***
-     * An attribute other than the tool's base stats, e.g. interaction range. Applied while the tool is in the main hand.
+     * An attribute other than the tool's base stats, e.g. interaction range. Applied while the tool is in the main hand,
+     * or while armor is worn.
      */
     public record ExtraAttribute(Attribute attribute, double amount, AttributeModifier.Operation operation) {}
 
@@ -20,6 +21,9 @@ public class ToolStats {
     private double attackSpeed;
     private double durability;
     private double digSpeed;
+    // Only used by armor
+    private double armor;
+    private double armorToughness;
     private final List<ExtraAttribute> extraAttributes = new ArrayList<>();
 
     public ToolStats(double attackDamage, double attackSpeed, double durability, double digSpeed) {
@@ -71,5 +75,21 @@ public class ToolStats {
 
     public void setDigSpeed(double digSpeed) {
         this.digSpeed = digSpeed;
+    }
+
+    public double getArmor() {
+        return armor;
+    }
+
+    public void setArmor(double armor) {
+        this.armor = armor;
+    }
+
+    public double getArmorToughness() {
+        return armorToughness;
+    }
+
+    public void setArmorToughness(double armorToughness) {
+        this.armorToughness = armorToughness;
     }
 }
