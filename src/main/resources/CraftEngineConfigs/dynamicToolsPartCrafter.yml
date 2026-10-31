@@ -1,0 +1,76 @@
+# The Part Crafter block for CraftEngine, the same as the ItemsAdder version.
+# Its textures are installed into this pack's resourcepack/assets/dynamictools/textures/block folder.
+items:
+  dynamictools:part_crafter:
+    material: paper
+    # Shows the block model in the inventory
+    model: dynamictools:block/part_crafter
+    data:
+      item_name: "Part Crafter"
+    behavior:
+      type: block_item
+      block: dynamictools:part_crafter
+
+blocks:
+  dynamictools:part_crafter:
+    states:
+      # "facing" makes the block face the player when placed, like a furnace
+      properties:
+        facing:
+          type: horizontal_direction
+          default: north
+      appearances:
+        north:
+          auto_state: note_block
+          model:
+            path: dynamictools:block/part_crafter
+            # Texture order: bottom, top, front, side
+            textures:
+              - dynamictools:block/part_crafter_bottom
+              - dynamictools:block/part_crafter_top
+              - dynamictools:block/part_crafter_front
+              - dynamictools:block/part_crafter_side
+        east:
+          auto_state: note_block
+          model:
+            path: dynamictools:block/part_crafter
+            y: 90
+        south:
+          auto_state: note_block
+          model:
+            path: dynamictools:block/part_crafter
+            y: 180
+        west:
+          auto_state: note_block
+          model:
+            path: dynamictools:block/part_crafter
+            y: 270
+      variants:
+        facing=north:
+          appearance: north
+        facing=east:
+          appearance: east
+        facing=south:
+          appearance: south
+        facing=west:
+          appearance: west
+    events:
+      - on: right_click
+        functions:
+          # Runs as the console by default
+          - type: command
+            command: "dt open partCrafter <arg:player.name>"
+
+recipes:
+  dynamictools:part_crafter:
+    type: shaped
+    pattern:
+      - "SS"
+      - "PP"
+      - "PP"
+    ingredients:
+      S: "minecraft:stick"
+      P: "#minecraft:planks"
+    result:
+      id: dynamictools:part_crafter
+      count: 1

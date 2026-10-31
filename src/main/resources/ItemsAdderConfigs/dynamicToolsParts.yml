@@ -77,7 +77,7 @@ items:
     resource:
       material: PAPER
       generate: false
-      model_path: minecraft:item/leather
+      model_path: minecraft:item/string
   armor_core:
     enabled: true
     name: "Armor Core"

@@ -13,6 +13,7 @@ import us.to.midensthings.dynamicTools.gui.DynamicToolsGui;
 import us.to.midensthings.dynamicTools.commands.CoreCommands;
 import us.to.midensthings.dynamicTools.commands.DebugCommands;
 import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
+import us.to.midensthings.dynamicTools.compat.ItemsAdderBlockRecipes;
 import us.to.midensthings.dynamicTools.compat.ItemsAdderCompat;
 import us.to.midensthings.dynamicTools.events.GuiListener;
 import us.to.midensthings.dynamicTools.events.VanillaRecipeListener;
@@ -88,6 +89,9 @@ public final class DynamicTools extends JavaPlugin {
         pm.registerEvents(new GuiListener(), this);
         pm.registerEvents(new VanillaRecipeListener(), this);
         pm.registerEvents(new WorkstationListener(), this);
+        if (customItemSource == CustomItemSource.ITEMSADDER) {
+            pm.registerEvents(new ItemsAdderBlockRecipes(), this);
+        }
 
         registerCommands();
     }
@@ -160,6 +164,10 @@ public final class DynamicTools extends JavaPlugin {
                 gui.returnInputs(player);
                 player.closeInventory();
             }
+        }
+
+        if (customItemSource == CustomItemSource.ITEMSADDER) {
+            ItemsAdderBlockRecipes.removeRecipes();
         }
 
         if (addonLoader != null) {

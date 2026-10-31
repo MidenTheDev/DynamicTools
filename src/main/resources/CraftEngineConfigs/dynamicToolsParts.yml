@@ -53,7 +53,7 @@ items:
   # Armor (Binding + Armor Core + frame = complete piece)
   dynamictools:armor_binding:
     material: paper
-    item_model: minecraft:leather
+    item_model: minecraft:string
     data:
       item_name: "Armor Binding"
   dynamictools:armor_core:

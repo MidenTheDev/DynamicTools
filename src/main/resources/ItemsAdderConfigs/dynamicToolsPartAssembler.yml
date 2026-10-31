@@ -1,3 +1,31 @@
 info:
   namespace: dynamictools
 items:
+  part_assembler:
+    enabled: true
+    name: "Part Assembler"
+    resource:
+      material: PAPER
+      generate: true
+      # Face order: down, east, north, south, up, west. North is the front, which faces the player when placed (FURNACE mode).
+      textures:
+        - block/part_assembler_bottom.png
+        - block/part_assembler_side.png
+        - block/part_assembler_front.png
+        - block/part_assembler_side.png
+        - block/part_assembler_top.png
+        - block/part_assembler_side.png
+    behaviours:
+      block:
+        placed_model:
+          type: REAL_NOTE
+          directional_mode: FURNACE
+    events:
+      placed_block:
+        interact:
+          execute_commands:
+            open_part_assembler:
+              command: 'dt open partAssembler {player}'
+              as_console: true
+# The crafting recipe (2 copper ingots over 4 planks of any wood) is added by DynamicTools,
+# since ItemsAdder recipes can't use item tags like #minecraft:planks.

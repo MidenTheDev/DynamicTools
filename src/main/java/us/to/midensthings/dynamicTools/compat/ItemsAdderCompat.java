@@ -16,14 +16,12 @@ public class ItemsAdderCompat {
 
     private static final String RESOURCE_FOLDER = "ItemsAdderConfigs/";
     private static final List<String> CONFIG_FILES = List.of(
-            "dynamicToolsParts.yml",
-            "dynamicToolsPartCrafter.yml",
-            "dynamicToolsPartAssembler.yml"
+            "dynamicToolsParts.yml"
     );
 
     /***
-     * Copies the DynamicTools item and block configs into plugins/ItemsAdder/contents/dynamictools/configs.
-     * Files that already exist are not overwritten.
+     * Copies the DynamicTools part configs into plugins/ItemsAdder/contents/dynamictools/configs, and the configs and
+     * textures of the custom blocks enabled in config.yml. Files that already exist are not overwritten.
      * @return true if any files were added, meaning ItemsAdder needs to be reloaded to pick them up.
      */
     public static boolean installConfigs() {
@@ -37,7 +35,16 @@ public class ItemsAdderCompat {
         for (String file : CONFIG_FILES) {
             added |= ResourceInstaller.copyResourceIfAbsent(RESOURCE_FOLDER + file, configsFolder.resolve(file));
         }
+        added |= CustomBlocks.install(RESOURCE_FOLDER, configsFolder, getAssetsFolder());
         return added;
+    }
+
+    /***
+     * @return a new instance of the custom block's item, or null if ItemsAdder doesn't have it loaded.
+     */
+    public static ItemStack getBlockItem(CustomBlocks.CustomBlock block) {
+        CustomStack stack = CustomStack.getInstance(NAMESPACE + ":" + block.id());
+        return stack == null ? null : stack.getItemStack();
     }
 
     /***

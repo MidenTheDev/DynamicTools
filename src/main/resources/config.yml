@@ -21,13 +21,14 @@ debug-mode: false
 # When debug mode is set to true, the plugin will log more details about its usage. This should remain FALSE for the majority of servers.
 
 part-crafter:
-  share-smithing-table: true
+  share-smithing-table: false
   # Clicking on a smithing table prompts the user to choose between the vanilla GUI or the Part Crafter GUI
   replace-smithing-table: false
   # Clicking on a smithing table opens the Part Crafter GUI. Takes priority over share-smithing-table.
   # If both are false, smithing tables work like vanilla and the Part Crafter can only be opened with /dt open.
-  custom-block: false
-  # Inject pre-made custom block into custom item plugin
+  custom-block: true
+  # Add the block to the custom item plugin: its config and textures are copied into ItemsAdder or CraftEngine,
+  # which makes the block and its resource pack. Right-clicking the placed block opens the GUI. Needs a restart, then /iazip or /ce reload all.
   gui:
     title: "Part Crafter"
     # MiniMessage formatting is supported
@@ -39,13 +40,14 @@ part-crafter:
 
 
 assembler:
-  share-anvil: true
+  share-anvil: false
   # Clicking on an anvil prompts the user to choose between the vanilla GUI or the Part Assembler GUI
   replace-anvil: false
   # Clicking on an anvil opens the Part Assembler GUI. Takes priority over share-anvil.
   # If both are false, anvils work like vanilla and the Part Assembler can only be opened with /dt open.
-  custom-block: false
-  # Inject pre-made custom block into custom item plugin
+  custom-block: true
+  # Add the block to the custom item plugin: its config and textures are copied into ItemsAdder or CraftEngine,
+  # which makes the block and its resource pack. Right-clicking the placed block opens the GUI. Needs a restart, then /iazip or /ce reload all.
   gui:
     title: "Part Assembler"
     # MiniMessage formatting is supported

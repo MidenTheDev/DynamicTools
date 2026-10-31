@@ -18,14 +18,13 @@ public class CraftEngineCompat {
 
     private static final String RESOURCE_FOLDER = "CraftEngineConfigs/";
     private static final List<String> CONFIG_FILES = List.of(
-            "dynamicToolsParts.yml",
-            "dynamicToolsPartCrafter.yml",
-            "dynamicToolsPartAssembler.yml"
+            "dynamicToolsParts.yml"
     );
 
     /***
-     * Copies the DynamicTools pack into plugins/CraftEngine/resources/dynamictools, with pack.yml at its root
-     * and the item and block configs in its configuration folder. Files that already exist are not overwritten.
+     * Copies the DynamicTools pack into plugins/CraftEngine/resources/dynamictools, with pack.yml at its root and the
+     * part configs in its configuration folder, plus the configs and textures of the custom blocks enabled in config.yml.
+     * Files that already exist are not overwritten.
      * @return true if any files were added, meaning CraftEngine needs to be reloaded to pick them up.
      */
     public static boolean installConfigs() {
@@ -41,6 +40,7 @@ public class CraftEngineCompat {
         for (String file : CONFIG_FILES) {
             added |= ResourceInstaller.copyResourceIfAbsent(RESOURCE_FOLDER + file, configurationFolder.resolve(file));
         }
+        added |= CustomBlocks.install(RESOURCE_FOLDER, configurationFolder, getAssetsFolder());
         return added;
     }
 
