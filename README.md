@@ -10,7 +10,7 @@
 
 <div align=center>
   
-![GitHub Release](https://img.shields.io/github/v/release/MidenTheDev/DynamicTools?style=for-the-badge&label=Latest%20Release&color=00B324&link=https%3A%2F%2Fmodrinth.com%2Fplugin%2Fnouveau-enchanting%2Fversions)
+![GitHub Release](https://img.shields.io/github/v/release/MidenTheDev/DynamicTools?style=for-the-badge&label=Latest%20Release&color=00B324)
 ![GitHub Release](https://img.shields.io/github/v/release/MidenTheDev/DynamicTools?include_prereleases&style=for-the-badge&label=Latest%20Pre-Release&color=E38F27)
 ![Static Badge](https://img.shields.io/badge/Requires%20Version-26.1%2B-GREEN?style=for-the-badge)
 
@@ -43,9 +43,10 @@ Below is a list of plugins the plugin supports for custom items:
 | Oraxen | ❌ |
 
 ## 🪙 Modifiers:
-Different materials can have different Modifiers attached to them that further alter a crafted tool's behavior and stats. Modifiers, for the most part, behave similarly
-to enchants, even having levels which affect the strength of the modifier. For example, Netherite has the Fireproof modifier which grants tools made of Netherite the
-fire-resistant property that vanilla Netherite has.
+Different materials can have different Modifiers attached to them that further alter a crafted tool's behavior and stats. Modifiers, for the most part, behave similarlyto enchants, even having levels which affect the strength of the modifier. For example, Netherite has the Fireproof
+modifier which grants tools made of Netherite the fire-resistant property that vanilla Netherite has.
+
+INSERT DEMO GIF HERE
 
 The plugin comes with a large set of modifiers that should suit most use cases of the plugin. The only modifiers that are in the default config are the Reinforced modifier
 and the Fireproof modifier, however. Other modifiers will need to be added to your materials manually. Click HERE for a list of all of the modifiers and how they work.
@@ -60,9 +61,11 @@ New modifiers can be created either via the Plugin's API or the Plugin's dedicat
 ## 💻 Commands:
 **/dt reload** - Reloads the plugin configuration. This command will NOT load any new addons (restart your server) or generate any textures (/dt generateTextures).
 
-**/dt open [partAssembler/partCrafter] {player}** - Opens the specified GUI for yourself or a specified player 
+**/dt open [partAssembler/partCrafter] {player}** - Opens the specified GUI for yourself or a specified player a
 
-**/dt generateTextures** - Re-generates the plugin's automatically generated textures.
+**/dt generateTextures** - Re-generates the plugin's automatically generated textures.s
+
+**/dt give [toolType] [material] [material] [material] {player} [true/false]** - Gives you (or the specified player) a copy of the specified tool made of the specified materials.
 
 
 ## ➕ Addons:
