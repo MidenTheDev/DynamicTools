@@ -16,5 +16,6 @@ public class NamespacedKeys {
     public static NamespacedKey tertiaryMaterial = new NamespacedKey(plugin,"tertiary-material");
 
     public static NamespacedKey modifiers = new NamespacedKey(plugin,"modifiers");
+    public static NamespacedKey bonusModifiers = new NamespacedKey(plugin,"bonus-modifiers");
 
 }

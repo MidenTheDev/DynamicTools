@@ -2,6 +2,7 @@ package us.to.midensthings.dynamicTools.commands;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -22,8 +23,11 @@ import us.to.midensthings.dynamicTools.DynamicTools;
 import us.to.midensthings.dynamicTools.gui.DynamicToolsGui;
 import us.to.midensthings.dynamicTools.gui.PartAssembler;
 import us.to.midensthings.dynamicTools.gui.PartCrafter;
+import us.to.midensthings.dynamicTools.modifiers.Modifier;
 import us.to.midensthings.dynamicTools.resourcepack.ResourcePackGenerator;
 import us.to.midensthings.dynamicTools.tools.Tool;
+import us.to.midensthings.dynamicTools.tools.ToolItems;
+import us.to.midensthings.dynamicTools.util.RomanNumerals;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
 import us.to.midensthings.dynamicTools.tools.ToolType;
 import us.to.midensthings.dynamicTools.util.ItemManager;
@@ -67,6 +71,14 @@ public class CoreCommands {
                                             })))
 
                             )))))
+            .then(Commands.literal("addModifier").requires(source -> source.getSender().hasPermission("dynamictools.commands.addmodifier"))
+                    .then(Commands.argument("modifier", StringArgumentType.word()).suggests(this::modifierSuggestions)
+                            .executes(ctx -> addModifierCommand(ctx, 1, false))
+                            .then(Commands.argument("level", IntegerArgumentType.integer(1))
+                                    .executes(ctx -> addModifierCommand(ctx, IntegerArgumentType.getInteger(ctx, "level"), false))
+                                    .then(Commands.argument("bypassToolTypes", BoolArgumentType.bool())
+                                            .executes(ctx -> addModifierCommand(ctx, IntegerArgumentType.getInteger(ctx, "level"),
+                                                    BoolArgumentType.getBool(ctx, "bypassToolTypes")))))))
             .then(Commands.literal("reload").requires(source -> source.getSender().hasPermission("dynamictools.commands.reload"))
                     .executes(ctx -> reloadCommand(ctx.getSource().getSender())))
             .then(Commands.literal("generateTextures").requires(source -> source.getSender().hasPermission("dynamictools.commands.generatetextures"))
@@ -82,6 +94,64 @@ public class CoreCommands {
             )
 
             .build();
+
+    /***
+     * Adds a modifier to the tool in the sender's main hand. The tool is rebuilt so stat modifiers change its stats,
+     * and keeps its damage, enchantments and name. Levels add to the level the tool already has.
+     * @param bypassToolTypes add the modifier even if it isn't valid for the tool's type
+     */
+    private int addModifierCommand(CommandContext<CommandSourceStack> ctx, int level, boolean bypassToolTypes) {
+        CommandSender sender = ctx.getSource().getSender();
+        if (!(sender instanceof Player p)) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Only players can use this command, it changes the tool in your hand."));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        String modifierId = StringArgumentType.getString(ctx, "modifier").toLowerCase(Locale.ROOT);
+        Modifier modifier = plugin.getModifierRegistry().getModifier(modifierId);
+        if (modifier == null) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Unknown modifier " + modifierId));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        ItemStack held = p.getInventory().getItemInMainHand();
+        if (!ToolItems.isTool(held)) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>You need to hold a DynamicTools tool."));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        Map<Modifier,Integer> bonusModifiers = plugin.getModifierManager().getBonusModifiers(held);
+        bonusModifiers.merge(modifier, level, Integer::sum);
+        Tool tool = Tool.fromItemStack(held, bonusModifiers);
+        if (tool == null) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>This tool is made from a material that no longer exists, so it can't be changed."));
+            return Command.SINGLE_SUCCESS;
+        }
+        if (!bypassToolTypes && !modifier.getValidToolTypes().contains(tool.getToolType())) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>" + modifierId + " can't be added to a " + tool.getToolType().getDisplayName()
+                    + ". Add true to the end of the command to add it anyway."));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        tool.copyPlayerChanges(held);
+        ItemStack result = tool.getItemStack();
+        result.setAmount(held.getAmount());
+        p.getInventory().setItemInMainHand(result);
+
+        sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Added ").append(MiniMessage.miniMessage().deserialize(modifier.getDisplayName()))
+                .append(MiniMessage.miniMessage().deserialize("<green> " + RomanNumerals.toRoman(level) + " to your " + tool.getToolType().getDisplayName()
+                        + " (now level " + RomanNumerals.toRoman(tool.getModifiers().get(modifier)) + ").")));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private CompletableFuture<Suggestions> modifierSuggestions(CommandContext<CommandSourceStack> ctx, final SuggestionsBuilder builder) {
+        plugin.getModifierRegistry().getModifiers().stream()
+                .map(Modifier::getId)
+                .filter(id -> id.startsWith(builder.getRemainingLowerCase()))
+                .sorted()
+                .forEach(builder::suggest);
+        return builder.buildFuture();
+    }
 
     /***
      * Reloads config.yml and materials.yml. Textures are left alone, /dt generateTextures does those.

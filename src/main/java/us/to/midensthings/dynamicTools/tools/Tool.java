@@ -4,6 +4,7 @@ import io.papermc.paper.datacomponent.DataComponentTypes;
 import io.papermc.paper.datacomponent.item.ItemAttributeModifiers;
 import io.papermc.paper.datacomponent.item.ItemLore;
 import io.papermc.paper.datacomponent.item.TooltipDisplay;
+import io.papermc.paper.persistence.PersistentDataContainerView;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -51,6 +52,8 @@ public class Tool {
 
     // Map of modifiers and their levels
     private Map<Modifier,Integer> modifiers;
+    // Modifiers added on top of the materials' modifiers, e.g. with /dt addModifier
+    private Map<Modifier,Integer> bonusModifiers;
 
 
     /* Mining Levels
@@ -69,6 +72,16 @@ public class Tool {
      * @param tertiaryMaterial
      */
     public Tool(ToolType toolType, ToolMaterial primaryMaterial, ToolMaterial secondaryMaterial, ToolMaterial tertiaryMaterial) {
+        this(toolType, primaryMaterial, secondaryMaterial, tertiaryMaterial, Map.of());
+    }
+
+    /***
+     * Constructs a tool with extra modifiers on top of the ones from its materials. Bonus modifiers always apply,
+     * even to tool types they aren't valid for, and add their levels to the same modifier from the materials.
+     * Does not check if the materials are valid for the tool in question.
+     */
+    public Tool(ToolType toolType, ToolMaterial primaryMaterial, ToolMaterial secondaryMaterial, ToolMaterial tertiaryMaterial,
+                Map<Modifier,Integer> bonusModifiers) {
         this.toolType = toolType;
         this.primaryMaterial = primaryMaterial;
         this.secondaryMaterial = secondaryMaterial;
@@ -80,12 +93,15 @@ public class Tool {
         // Construct item
         String baseMaterialType;
 
-        switch (miningLevel) {
-            case 2 -> baseMaterialType = "STONE_";
-            case 3 -> baseMaterialType = "IRON_";
-            case 4 -> baseMaterialType = "DIAMOND_";
-            default -> baseMaterialType = "WOODEN_";
-
+        // 1 or lower (including a material with no miningLevel set) is wood, 4 and up is diamond
+        if (miningLevel >= 4) {
+            baseMaterialType = "DIAMOND_";
+        } else {
+            switch (miningLevel) {
+                case 2 -> baseMaterialType = "STONE_";
+                case 3 -> baseMaterialType = "IRON_";
+                default -> baseMaterialType = "WOODEN_";
+            }
         }
         Material baseMaterial;
 
@@ -143,6 +159,9 @@ public class Tool {
 
         // Apply modifiers to the stats from the materials
         this.modifiers = collectModifiers(toolType, primaryMaterial, secondaryMaterial, tertiaryMaterial);
+        this.bonusModifiers = new LinkedHashMap<>(bonusModifiers);
+        bonusModifiers.forEach((modifier, level) -> modifiers.merge(modifier, level, Integer::sum));
+        plugin.getModifierManager().setBonusModifiers(item, this.bonusModifiers);
         ToolStats stats = new ToolStats(damageStat, speedStat, durabilityStat, digSpeedStat);
         modifiers.forEach((modifier, level) -> {
             if (modifier instanceof StatModifier statModifier) {
@@ -327,5 +346,54 @@ public class Tool {
 
     public Map<Modifier, Integer> getModifiers() {
         return modifiers;
+    }
+
+    public Map<Modifier, Integer> getBonusModifiers() {
+        return bonusModifiers;
+    }
+
+    /***
+     * Rebuilds a tool from the tool type, materials and bonus modifiers stored on its item, with the current materials.yml stats.
+     * @param bonusModifiers the bonus modifiers for the rebuilt tool, or null to keep the item's bonus modifiers
+     * @return the rebuilt tool, or null if the item isn't a tool or one of its materials no longer exists
+     */
+    public static Tool fromItemStack(ItemStack item, Map<Modifier,Integer> bonusModifiers) {
+        if (!ToolItems.isTool(item)) {
+            return null;
+        }
+        PersistentDataContainerView pdc = item.getPersistentDataContainer();
+        ToolType toolType;
+        try {
+            toolType = ToolType.valueOf(pdc.get(NamespacedKeys.toolType, PersistentDataType.STRING));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+        ToolMaterial primary = ToolMaterial.fromId(pdc.getOrDefault(NamespacedKeys.primaryMaterial, PersistentDataType.STRING, ""));
+        ToolMaterial secondary = ToolMaterial.fromId(pdc.getOrDefault(NamespacedKeys.secondaryMaterial, PersistentDataType.STRING, ""));
+        ToolMaterial tertiary = ToolMaterial.fromId(pdc.getOrDefault(NamespacedKeys.tertiaryMaterial, PersistentDataType.STRING, ""));
+        if (primary == null || secondary == null || tertiary == null) {
+            return null;
+        }
+        if (bonusModifiers == null) {
+            bonusModifiers = plugin.getModifierManager().getBonusModifiers(item);
+        }
+        return new Tool(toolType, primary, secondary, tertiary, bonusModifiers);
+    }
+
+    /***
+     * Copies what players can change about a tool (damage, enchantments, name, anvil repair cost) from an older copy
+     * of the tool onto this one, e.g. after rebuilding it.
+     */
+    public void copyPlayerChanges(ItemStack oldItem) {
+        int maxDamage = item.getDataOrDefault(DataComponentTypes.MAX_DAMAGE, 1);
+        // Keep the tool from breaking if its new max durability is lower than the damage it had
+        item.setData(DataComponentTypes.DAMAGE, Math.min(oldItem.getDataOrDefault(DataComponentTypes.DAMAGE, 0), maxDamage - 1));
+        item.addUnsafeEnchantments(oldItem.getEnchantments());
+        if (oldItem.hasData(DataComponentTypes.CUSTOM_NAME)) {
+            item.setData(DataComponentTypes.CUSTOM_NAME, oldItem.getData(DataComponentTypes.CUSTOM_NAME));
+        }
+        if (oldItem.hasData(DataComponentTypes.REPAIR_COST)) {
+            item.setData(DataComponentTypes.REPAIR_COST, oldItem.getData(DataComponentTypes.REPAIR_COST));
+        }
     }
 }

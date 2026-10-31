@@ -2,6 +2,7 @@ package us.to.midensthings.dynamicTools.tools;
 
 import io.papermc.paper.persistence.PersistentDataContainerView;
 import org.bukkit.inventory.ItemStack;
+import us.to.midensthings.dynamicTools.DynamicTools;
 import org.bukkit.persistence.PersistentDataType;
 import us.to.midensthings.dynamicTools.util.NamespacedKeys;
 
@@ -29,21 +30,29 @@ public final class ToolItems {
     }
 
     /***
-     * @return the tool type and materials of the tool, e.g. "PICKAXE/iron/wood/gold", or null if the item isn't a tool.
+     * @return the tool type, materials and bonus modifiers of the tool, e.g. "PICKAXE/iron/wood/gold" or
+     * "PICKAXE/iron/wood/gold/frigid:2", or null if the item isn't a tool.
      */
     public static String getToolSignature(ItemStack item) {
         if (!isTool(item)) {
             return null;
         }
         PersistentDataContainerView pdc = item.getPersistentDataContainer();
-        return pdc.get(NamespacedKeys.toolType, PersistentDataType.STRING)
-                + "/" + pdc.get(NamespacedKeys.primaryMaterial, PersistentDataType.STRING)
-                + "/" + pdc.get(NamespacedKeys.secondaryMaterial, PersistentDataType.STRING)
-                + "/" + pdc.get(NamespacedKeys.tertiaryMaterial, PersistentDataType.STRING);
+        StringBuilder signature = new StringBuilder()
+                .append(pdc.get(NamespacedKeys.toolType, PersistentDataType.STRING))
+                .append("/").append(pdc.get(NamespacedKeys.primaryMaterial, PersistentDataType.STRING))
+                .append("/").append(pdc.get(NamespacedKeys.secondaryMaterial, PersistentDataType.STRING))
+                .append("/").append(pdc.get(NamespacedKeys.tertiaryMaterial, PersistentDataType.STRING));
+        DynamicTools.getPlugin(DynamicTools.class).getModifierManager().getBonusModifiers(item).entrySet().stream()
+                .map(entry -> entry.getKey().getId() + ":" + entry.getValue())
+                .sorted()
+                .forEach(bonus -> signature.append("/").append(bonus));
+        return signature.toString();
     }
 
     /***
-     * @return true if both items are tools of the same type made from the same materials in the same parts.
+     * @return true if both items are tools of the same type made from the same materials in the same parts,
+     * with the same bonus modifiers.
      */
     public static boolean isSameTool(ItemStack first, ItemStack second) {
         String signature = getToolSignature(first);

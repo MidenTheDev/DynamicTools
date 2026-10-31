@@ -2,7 +2,7 @@ name: DynamicTools
 version: '${version}'
 
 main: us.to.midensthings.dynamicTools.DynamicTools
-api-version: '26.3'
+api-version: '26.1'
 load: POSTWORLD
 
 dependencies:
@@ -26,6 +26,8 @@ permissions:
   dynamictools.commands.generatetextures:
     default: op
   dynamictools.commands.reload:
+    default: op
+  dynamictools.commands.addmodifier:
     default: op
   dynamictools.commands.open.others:
     default: op

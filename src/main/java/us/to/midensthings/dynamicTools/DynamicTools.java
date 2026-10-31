@@ -7,7 +7,9 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.entity.Player;
 import us.to.midensthings.dynamicTools.addons.AddonLoader;
+import us.to.midensthings.dynamicTools.gui.DynamicToolsGui;
 import us.to.midensthings.dynamicTools.commands.CoreCommands;
 import us.to.midensthings.dynamicTools.commands.DebugCommands;
 import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
@@ -146,6 +148,14 @@ public final class DynamicTools extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        // The close event isn't handled once the plugin is disabled, so give back the items in open GUIs before they're lost
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.getOpenInventory().getTopInventory().getHolder(false) instanceof DynamicToolsGui gui) {
+                gui.returnInputs(player);
+                player.closeInventory();
+            }
+        }
+
         if (addonLoader != null) {
             addonLoader.disableAddons();
         }
@@ -261,18 +271,18 @@ public final class DynamicTools extends JavaPlugin {
 
             ToolMaterial material = new ToolMaterial(
                     mat.toLowerCase(),
-                    materialsConf.getDouble(mat+".stats.durability"),
-                    materialsConf.getDouble(mat+".multipliers.durability"),
-                    materialsConf.getDouble(mat+".stats.attackDamage"),
-                    materialsConf.getDouble(mat+".multipliers.attackDamage"),
-                    materialsConf.getDouble(mat+".stats.attackSpeed"),
-                    materialsConf.getDouble(mat+".multipliers.attackSpeed"),
-                    materialsConf.getDouble(mat+".stats.digSpeed"),
-                    materialsConf.getDouble(mat+".multipliers.digSpeed"),
+                    materialsConf.getDouble(mat+".stats.durability",100.0),
+                    materialsConf.getDouble(mat+".multipliers.durability",1.0),
+                    materialsConf.getDouble(mat+".stats.attackDamage",1.0),
+                    materialsConf.getDouble(mat+".multipliers.attackDamage",1.0),
+                    materialsConf.getDouble(mat+".stats.attackSpeed",0.8),
+                    materialsConf.getDouble(mat+".multipliers.attackSpeed",1.0),
+                    materialsConf.getDouble(mat+".stats.digSpeed",2),
+                    materialsConf.getDouble(mat+".multipliers.digSpeed",1.0),
                     materialsConf.getDouble(mat+".stats.armor"),
-                    materialsConf.getDouble(mat+".multipliers.armor"),
+                    materialsConf.getDouble(mat+".multipliers.armor",1.0),
                     materialsConf.getDouble(mat+".stats.armorToughness"),
-                    materialsConf.getDouble(mat+".multipliers.armorToughness"),
+                    materialsConf.getDouble(mat+".multipliers.armorToughness",1.0),
                     materialsConf.getInt(mat+".stats.miningLevel"),
                     materialsConf.getString(mat+".display-name"),
                     validParts,

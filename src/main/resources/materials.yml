@@ -2,6 +2,7 @@
 #   "#minecraft:planks"  - every item in an item tag
 #   "minecraft:stick"    - a vanilla item
 #   "my_items:ruby"      - an ItemsAdder or CraftEngine custom item, by its namespaced ID
+#   If an item is an input for more than one material, the material listed first in this file is used.
 # colors: (optional) hex colors the part textures are recolored with. The darkest pixels become dark, the highlights light.
 #   Materials without colors use the uncolored base textures.
 # modifiers: (optional) the modifiers tools made with this material get, as modifier ID: level
@@ -217,7 +218,7 @@ iron_chain:
 #sapphire:
 #  display-name: "<#3584e4>Sapphire</#3584e4>"
 #  materials:
-#    - "#minecraft:diamond_tool_materials"
+#    - "tbmcia:sapphire"
 #  stats:
 #    durability: 650
 #    attackDamage: 3.5

@@ -1,5 +1,6 @@
 package us.to.midensthings.dynamicTools.modifiers.builtin;
 
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -7,6 +8,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import us.to.midensthings.dynamicTools.modifiers.EventModifier;
 import us.to.midensthings.dynamicTools.tools.ToolType;
+import us.to.midensthings.dynamicTools.util.TypeSets;
 
 import java.util.Set;
 
@@ -26,7 +28,7 @@ public class LifestealModifier implements EventModifier {
 
     @Override
     public Set<ToolType> getValidToolTypes() {
-        return Set.of();
+        return TypeSets.onlyWeapons;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -39,7 +41,13 @@ public class LifestealModifier implements EventModifier {
             return;
         }
         double healing = e.getDamage() *(0.08*level);
-        attacker.setHealth(attacker.getHealth()+healing);
+        double totalHealth = healing + attacker.getHealth();
+        double maxHealth = attacker.getAttribute(Attribute.MAX_HEALTH).getValue();
+        if (totalHealth >= maxHealth) {
+            attacker.setHealth(maxHealth);
+            return;
+        }
+        attacker.setHealth(totalHealth);
 
     }
 }
