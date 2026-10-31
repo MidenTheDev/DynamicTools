@@ -19,6 +19,7 @@ import org.bukkit.persistence.PersistentDataType;
 import us.to.midensthings.dynamicTools.DynamicTools;
 import us.to.midensthings.dynamicTools.modifiers.Modifier;
 import us.to.midensthings.dynamicTools.modifiers.StatModifier;
+import us.to.midensthings.dynamicTools.resourcepack.ResourcePackGenerator;
 import us.to.midensthings.dynamicTools.util.NamespacedKeys;
 import us.to.midensthings.dynamicTools.util.RomanNumerals;
 
@@ -211,9 +212,9 @@ public class Tool {
                 .addHiddenComponents(DataComponentTypes.ATTRIBUTE_MODIFIERS)
                 .build());
 
-        modifiers.forEach((modifier, level) -> modifier.applyToItem(item, level));
+        ResourcePackGenerator.applyToolModel(item, toolType, primaryMaterial, secondaryMaterial, tertiaryMaterial);
 
-        // TODO: Set custom model for custom texture
+        modifiers.forEach((modifier, level) -> modifier.applyToItem(item, level));
     }
 
     /***

@@ -10,7 +10,7 @@ import us.to.midensthings.dynamicTools.commands.CoreCommands;
 import us.to.midensthings.dynamicTools.commands.DebugCommands;
 import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
 import us.to.midensthings.dynamicTools.compat.ItemsAdderCompat;
-import us.to.midensthings.dynamicTools.listeners.GuiListener;
+import us.to.midensthings.dynamicTools.events.GuiListener;
 import us.to.midensthings.dynamicTools.modifiers.Modifier;
 import us.to.midensthings.dynamicTools.modifiers.ModifierManager;
 import us.to.midensthings.dynamicTools.modifiers.ModifierRegistry;
@@ -18,16 +18,22 @@ import us.to.midensthings.dynamicTools.modifiers.builtin.FireproofModifier;
 import us.to.midensthings.dynamicTools.modifiers.builtin.FrigidModifier;
 import us.to.midensthings.dynamicTools.modifiers.builtin.ReinforcedModifier;
 import us.to.midensthings.dynamicTools.parts.PartType;
+import us.to.midensthings.dynamicTools.resourcepack.ResourcePackGenerator;
+import us.to.midensthings.dynamicTools.tools.MaterialColors;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
 import us.to.midensthings.dynamicTools.tools.ToolMaterialRegistry;
 import us.to.midensthings.dynamicTools.parts.PartManager;
+import net.kyori.adventure.text.format.TextColor;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.logging.Level;
 
 public final class DynamicTools extends JavaPlugin {
     public enum CustomItemSource {
@@ -69,6 +75,8 @@ public final class DynamicTools extends JavaPlugin {
         installCustomItemConfigs();
 
         initializeRegistries();
+
+        generateResourcePack();
 
         // register events
         pm.registerEvents(new GuiListener(), this);
@@ -208,7 +216,8 @@ public final class DynamicTools extends JavaPlugin {
                     materialsConf.getString(mat+".display-name"),
                     validParts,
                     materialsConf.getStringList(mat+".materials"),
-                    modifiers
+                    modifiers,
+                    loadMaterialColors(mat)
             );
 
             toolMaterialRegistry.registerToolMaterial(material);
@@ -217,6 +226,51 @@ public final class DynamicTools extends JavaPlugin {
         this.partManager = new PartManager();
     }
     
+    /***
+     * @return the material's texture colors, or null if it has none or they're invalid.
+     */
+    private MaterialColors loadMaterialColors(String mat) {
+        ConfigurationSection colorsSection = materialsConf.getConfigurationSection(mat+".colors");
+        if (colorsSection == null) {
+            return null;
+        }
+        TextColor light = TextColor.fromHexString(colorsSection.getString("light", ""));
+        TextColor medium = TextColor.fromHexString(colorsSection.getString("medium", ""));
+        TextColor dark = TextColor.fromHexString(colorsSection.getString("dark", ""));
+        if (light == null || medium == null || dark == null) {
+            this.getLogger().warning("Material "+mat+" needs light, medium and dark colors as hex codes like \"#a1b2c3\". Its parts won't have textures.");
+            return null;
+        }
+        return new MaterialColors(light.value(), medium.value(), dark.value());
+    }
+
+    /***
+     * Generates the part and tool textures and models into the custom item source plugin's resource pack folder.
+     */
+    private void generateResourcePack() {
+        if (!getConfig().getBoolean("resource-pack.generate", true)) {
+            return;
+        }
+        Path assetsFolder = switch (customItemSource) {
+            case ITEMSADDER -> ItemsAdderCompat.getAssetsFolder();
+            case CRAFTENGINE -> CraftEngineCompat.getAssetsFolder();
+        };
+        if (assetsFolder == null) {
+            return;
+        }
+
+        getLogger().info("Generating resource pack files");
+        try {
+            int changed = new ResourcePackGenerator().generate(assetsFolder);
+            if (changed > 0) {
+                getLogger().info("Updated " + changed + " resource pack files in " + assetsFolder
+                        + (customItemSource == CustomItemSource.ITEMSADDER ? ". Run /iazip if ItemsAdder has already built its pack." : ". Run /ce reload all if CraftEngine has already built its pack."));
+            }
+        } catch (IOException e) {
+            getLogger().log(Level.SEVERE, "Could not generate the resource pack files", e);
+        }
+    }
+
     public void loadCompats() {
         this.getLogger().info("Loading plugin compatibility modules");
         enabledCompats = new ArrayList<>();

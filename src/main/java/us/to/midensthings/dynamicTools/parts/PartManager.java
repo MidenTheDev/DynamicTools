@@ -8,6 +8,7 @@ import org.bukkit.persistence.PersistentDataType;
 import us.to.midensthings.dynamicTools.DynamicTools;
 import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
 import us.to.midensthings.dynamicTools.compat.ItemsAdderCompat;
+import us.to.midensthings.dynamicTools.resourcepack.ResourcePackGenerator;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
 import us.to.midensthings.dynamicTools.util.NamespacedKeys;
 
@@ -40,6 +41,9 @@ public class PartManager {
         String nameString = toolMaterial.getDisplayName()+" "+partType.getDisplayName();
         item.setData(DataComponentTypes.CUSTOM_NAME, MiniMessage.miniMessage().deserialize(nameString)
                 .decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE));
+
+        // Use the material's texture instead of the custom item plugin's model
+        ResourcePackGenerator.applyPartModel(item, partType, toolMaterial);
 
         // Set PDC data
         item.editPersistentDataContainer(pdc -> {

@@ -45,6 +45,19 @@ public class CraftEngineCompat {
     }
 
     /***
+     * @return the folder CraftEngine merges into its resource pack as assets/dynamictools,
+     * plugins/CraftEngine/resources/dynamictools/resourcepack/assets/dynamictools. Null if CraftEngine isn't installed.
+     */
+    public static Path getAssetsFolder() {
+        Plugin craftEngine = Bukkit.getPluginManager().getPlugin("CraftEngine");
+        if (craftEngine == null) {
+            return null;
+        }
+        return craftEngine.getDataFolder().toPath().resolve("resources").resolve(NAMESPACE)
+                .resolve("resourcepack").resolve("assets").resolve(NAMESPACE);
+    }
+
+    /***
      * @return a new instance of the part's custom item, or null if CraftEngine doesn't have it loaded.
      */
     public ItemStack getPartStack(PartType partType) {

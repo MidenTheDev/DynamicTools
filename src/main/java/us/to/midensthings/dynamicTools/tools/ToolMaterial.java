@@ -56,9 +56,12 @@ public class ToolMaterial {
     // The modifiers this material gives tools and their levels
     private Map<Modifier,Integer> modifiers;
 
+    // The colors used for this material's part textures, null if it has none
+    private MaterialColors colors;
 
 
-    public ToolMaterial(String id, double durability, double durabilityMultiplier, double attackDamage, double attackDamageMultiplier, double attackSpeed, double attackSpeedMultiplier, double digSpeed, double digSpeedMultiplier, double armor, double armorMultiplier, double armorToughness, double armorToughnessMultiplier, int miningLevel, String displayName, List<PartType> validParts, List<String> validInputMaterials, Map<Modifier,Integer> modifiers) {
+
+    public ToolMaterial(String id, double durability, double durabilityMultiplier, double attackDamage, double attackDamageMultiplier, double attackSpeed, double attackSpeedMultiplier, double digSpeed, double digSpeedMultiplier, double armor, double armorMultiplier, double armorToughness, double armorToughnessMultiplier, int miningLevel, String displayName, List<PartType> validParts, List<String> validInputMaterials, Map<Modifier,Integer> modifiers, MaterialColors colors) {
         this.id = id;
         this.durability = durability;
         this.durabilityMultiplier = durabilityMultiplier;
@@ -77,6 +80,7 @@ public class ToolMaterial {
         this.validParts = validParts;
         this.validInputMaterials = validInputMaterials;
         this.modifiers = modifiers;
+        this.colors = colors;
         parseInputMaterials();
     }
 
@@ -251,5 +255,12 @@ public class ToolMaterial {
      */
     public Map<Modifier, Integer> getModifiers() {
         return modifiers;
+    }
+
+    /***
+     * @return the colors for this material's part textures, or null if the material has no textures.
+     */
+    public MaterialColors getColors() {
+        return colors;
     }
 }

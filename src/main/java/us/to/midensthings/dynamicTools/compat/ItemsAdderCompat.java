@@ -41,6 +41,19 @@ public class ItemsAdderCompat {
     }
 
     /***
+     * @return the folder ItemsAdder merges into its resource pack as assets/dynamictools,
+     * plugins/ItemsAdder/contents/dynamictools/resourcepack/assets/dynamictools. Null if ItemsAdder isn't installed.
+     */
+    public static Path getAssetsFolder() {
+        Plugin itemsAdder = Bukkit.getPluginManager().getPlugin("ItemsAdder");
+        if (itemsAdder == null) {
+            return null;
+        }
+        return itemsAdder.getDataFolder().toPath().resolve("contents").resolve(NAMESPACE)
+                .resolve("resourcepack").resolve("assets").resolve(NAMESPACE);
+    }
+
+    /***
      * @return a new instance of the part's custom item, or null if ItemsAdder doesn't have it loaded.
      */
     public ItemStack getPartStack(PartType partType) {

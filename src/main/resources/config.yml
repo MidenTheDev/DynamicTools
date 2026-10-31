@@ -10,6 +10,11 @@ preferred-custom-item-plugin: ItemsAdder
 # Options: CraftEngine, ItemsAdder
 # DT will try to use whatever plugin you list, but if the plugin isn't found it will fall back to whatever option it can find.
 
+resource-pack:
+  generate: true
+  # Generate part and tool textures from each material's colors and add them to the custom item plugin's resource pack.
+  # If false, parts use the custom item plugin's models and tools look like vanilla tools.
+
 part-crafter:
   share-smithing-table: true
   # Clicking on a smithing table prompts the user to choose between the vanilla GUI or the Part Crafter GUI

@@ -2,6 +2,8 @@
 #   "#minecraft:planks"  - every item in an item tag
 #   "minecraft:stick"    - a vanilla item
 #   "my_items:ruby"      - an ItemsAdder or CraftEngine custom item, by its namespaced ID
+# colors: (optional) hex colors the part textures are recolored with. The darkest pixels become dark, the highlights light.
+#   Materials without colors use the uncolored base textures.
 # modifiers: (optional) the modifiers tools made with this material get, as modifier ID: level
 #   Each modifier only applies to the tool types it supports (e.g. frigid only goes on weapons), so a material can list
 #   separate modifiers for different kinds of tools.
@@ -12,6 +14,10 @@
 #     frigid: 2
 wood:
   display-name: "<#b5835a>Wooden</#b5835a>"
+  colors:
+    light: "#c29d62"
+    medium: "#896727"
+    dark: "#3d2b12"
   materials:
     - "#minecraft:wooden_tool_materials"
   stats:
@@ -37,6 +43,10 @@ wood:
 
 stone:
   display-name: "<dark_gray>Stone</dark_gray>"
+  colors:
+    light: "#a6a6a6"
+    medium: "#6e6e6e"
+    dark: "#2c2c2c"
   materials:
     - "#minecraft:stone_tool_materials"
   stats:
@@ -62,6 +72,10 @@ stone:
 
 copper:
   display-name: "<#ffa348>Copper</#ffa348>"
+  colors:
+    light: "#fcbf9c"
+    medium: "#c86b45"
+    dark: "#5a2a17"
   materials:
     - "#minecraft:copper_tool_materials"
   stats:
@@ -82,6 +96,10 @@ copper:
 
 iron:
   display-name: "<gray>Iron</gray>"
+  colors:
+    light: "#e6e6e6"
+    medium: "#c9c9c9"
+    dark: "#4a4a4a"
   materials:
     - "#minecraft:iron_tool_materials"
   stats:
@@ -105,6 +123,10 @@ iron:
 
 gold:
   display-name: "<#e5a00a>Golden</#e5a00a>"
+  colors:
+    light: "#fffba8"
+    medium: "#f5c43a"
+    dark: "#8a5a12"
   materials:
     - "#minecraft:gold_tool_materials"
   stats:
@@ -124,6 +146,10 @@ gold:
 
 diamond:
   display-name: "<#38e8dd>Diamond</#38e8dd>"
+  colors:
+    light: "#d8fff7"
+    medium: "#33ebcb"
+    dark: "#0e4b40"
   materials:
     - "#minecraft:diamond_tool_materials"
   stats:
@@ -144,6 +170,10 @@ diamond:
 
 netherite:
   display-name: "<#2F2736>Netherite</#2F2736>"
+  colors:
+    light: "#7a6e78"
+    medium: "#4a3f4a"
+    dark: "#1d161c"
   materials:
     - "#minecraft:netherite_tool_materials"
   stats:
@@ -185,7 +215,7 @@ iron_chain:
 
 # custom material example
 #sapphire:
-#  display-name: "<#38e8dd>Diamond</#38e8dd>"
+#  display-name: "<#3584e4>Sapphire</#3584e4>"
 #  materials:
 #    - "#minecraft:diamond_tool_materials"
 #  stats:
