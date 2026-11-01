@@ -58,6 +58,14 @@ public class CraftEngineCompat {
     }
 
     /***
+     * @return a new instance of the custom block's item, or null if CraftEngine doesn't have it loaded.
+     */
+    public static ItemStack getBlockItem(CustomBlocks.CustomBlock block) {
+        BukkitItemDefinition definition = CraftEngineItems.byId(NAMESPACE + ":" + block.id());
+        return definition == null ? null : definition.buildBukkitItem();
+    }
+
+    /***
      * @return a new instance of the part's custom item, or null if CraftEngine doesn't have it loaded.
      */
     public ItemStack getPartStack(PartType partType) {

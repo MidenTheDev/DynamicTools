@@ -45,6 +45,28 @@ public final class CustomBlocks {
     }
 
     /***
+     * @return the block with this ID, or null if there isn't one
+     */
+    public static CustomBlock fromId(String id) {
+        for (CustomBlock block : ALL) {
+            if (block.id().equals(id)) {
+                return block;
+            }
+        }
+        return null;
+    }
+
+    /***
+     * @return a new instance of the block's item from the custom item plugin, or null if it isn't loaded there
+     */
+    public static ItemStack getBlockItem(CustomBlock block) {
+        return switch (plugin.getCustomItemSource()) {
+            case ITEMSADDER -> ItemsAdderCompat.getBlockItem(block);
+            case CRAFTENGINE -> CraftEngineCompat.getBlockItem(block);
+        };
+    }
+
+    /***
      * Installs the configs and textures of the enabled blocks. Configs that are still the empty placeholders from older
      * versions are replaced, otherwise existing files are kept so edits made by server owners stay.
      * @param resourceFolder the folder in the jar the block configs are in, e.g. ItemsAdderConfigs/

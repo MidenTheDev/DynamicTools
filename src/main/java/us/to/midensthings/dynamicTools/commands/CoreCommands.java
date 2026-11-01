@@ -13,6 +13,8 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.command.brigadier.argument.ArgumentTypes;
 import io.papermc.paper.command.brigadier.argument.resolvers.selector.PlayerSelectorArgumentResolver;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -20,6 +22,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import us.to.midensthings.dynamicTools.DynamicTools;
+import us.to.midensthings.dynamicTools.compat.CustomBlocks;
+import us.to.midensthings.dynamicTools.parts.PartType;
 import us.to.midensthings.dynamicTools.gui.DynamicToolsGui;
 import us.to.midensthings.dynamicTools.gui.PartAssembler;
 import us.to.midensthings.dynamicTools.gui.PartCrafter;
@@ -50,28 +54,50 @@ public class CoreCommands {
     private static final AtomicBoolean generatingTextures = new AtomicBoolean(false);
     public LiteralCommandNode<CommandSourceStack> coreCommand = Commands.literal("dt")
             .then(Commands.literal("give").requires(source -> source.getSender().hasPermission("dynamictools.commands.give"))
-                    .then(Commands.argument("toolType", StringArgumentType.word()).suggests(this::toolTypesSuggestions)
-                            .then(Commands.argument("primaryMaterial",StringArgumentType.word()).suggests(this::materialSuggestions).then(Commands.argument("secondaryMaterial",StringArgumentType.word()).suggests(this::materialSuggestions).then(Commands.argument("tertiaryMaterial",StringArgumentType.word()).suggests(this::materialSuggestions).executes(ctx -> {
-                                CommandSender sender = ctx.getSource().getSender();
-                                if (!(sender instanceof Player)) {
-                                    sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Please specify a player!"));
-                                    return Command.SINGLE_SUCCESS;
-                                }
-                                Player p = (Player) sender;
-                                return giveCommand(ctx,p,sender,false);
-                            })
-                                            .then(Commands.argument("player", ArgumentTypes.player()).executes(ctx -> {
-                                                final PlayerSelectorArgumentResolver resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
-                                                Player p = resolver.resolve(ctx.getSource()).getFirst();
-                                                return giveCommand(ctx,p,ctx.getSource().getSender(),false);
-                                            }).then(Commands.argument("bypassChecks", BoolArgumentType.bool()).executes(ctx -> {
-                                                final PlayerSelectorArgumentResolver resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
-                                                Player p = resolver.resolve(ctx.getSource()).getFirst();
-                                                boolean bypassChecks = ctx.getArgument("bypassChecks",boolean.class);
-                                                return giveCommand(ctx,p,ctx.getSource().getSender(),bypassChecks);
-                                            })))
+                    // /dt give tool <toolType> <head> <handle> <binding> [player] [bypassChecks]
+                    .then(Commands.literal("tool")
+                            .then(Commands.argument("toolType", StringArgumentType.word()).suggests(this::toolTypesSuggestions)
+                                    .then(Commands.argument("primaryMaterial",StringArgumentType.word()).suggests(this::materialSuggestions).then(Commands.argument("secondaryMaterial",StringArgumentType.word()).suggests(this::materialSuggestions).then(Commands.argument("tertiaryMaterial",StringArgumentType.word()).suggests(this::materialSuggestions).executes(ctx -> {
+                                        CommandSender sender = ctx.getSource().getSender();
+                                        if (!(sender instanceof Player)) {
+                                            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Please specify a player!"));
+                                            return Command.SINGLE_SUCCESS;
+                                        }
+                                        Player p = (Player) sender;
+                                        return giveCommand(ctx,p,sender,false);
+                                    })
+                                                    .then(Commands.argument("player", ArgumentTypes.player()).executes(ctx -> {
+                                                        final PlayerSelectorArgumentResolver resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
+                                                        Player p = resolver.resolve(ctx.getSource()).getFirst();
+                                                        return giveCommand(ctx,p,ctx.getSource().getSender(),false);
+                                                    }).then(Commands.argument("bypassChecks", BoolArgumentType.bool()).executes(ctx -> {
+                                                        final PlayerSelectorArgumentResolver resolver = ctx.getArgument("player", PlayerSelectorArgumentResolver.class);
+                                                        Player p = resolver.resolve(ctx.getSource()).getFirst();
+                                                        boolean bypassChecks = ctx.getArgument("bypassChecks",boolean.class);
+                                                        return giveCommand(ctx,p,ctx.getSource().getSender(),bypassChecks);
+                                                    })))
 
-                            )))))
+                                    )))))
+                    // /dt give part <partType> <material> [player] [amount] [bypassChecks]
+                    .then(Commands.literal("part")
+                            .then(Commands.argument("partType", StringArgumentType.word()).suggests(this::partTypeSuggestions)
+                                    .then(Commands.argument("material", StringArgumentType.word()).suggests(this::materialSuggestions)
+                                            .executes(ctx -> givePartCommand(ctx, null, 1, false))
+                                            .then(Commands.argument("player", ArgumentTypes.player())
+                                                    .executes(ctx -> givePartCommand(ctx, resolvePlayer(ctx), 1, false))
+                                                    .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                                            .executes(ctx -> givePartCommand(ctx, resolvePlayer(ctx), IntegerArgumentType.getInteger(ctx, "amount"), false))
+                                                            .then(Commands.argument("bypassChecks", BoolArgumentType.bool())
+                                                                    .executes(ctx -> givePartCommand(ctx, resolvePlayer(ctx), IntegerArgumentType.getInteger(ctx, "amount"),
+                                                                            BoolArgumentType.getBool(ctx, "bypassChecks")))))))))
+                    // /dt give misc <item> [player] [amount], for the Part Crafter and Part Assembler blocks
+                    .then(Commands.literal("misc")
+                            .then(Commands.argument("item", StringArgumentType.word()).suggests(this::miscItemSuggestions)
+                                    .executes(ctx -> giveMiscCommand(ctx, null, 1))
+                                    .then(Commands.argument("player", ArgumentTypes.player())
+                                            .executes(ctx -> giveMiscCommand(ctx, resolvePlayer(ctx), 1))
+                                            .then(Commands.argument("amount", IntegerArgumentType.integer(1, 64))
+                                                    .executes(ctx -> giveMiscCommand(ctx, resolvePlayer(ctx), IntegerArgumentType.getInteger(ctx, "amount"))))))))
             .then(Commands.literal("addModifier").requires(source -> source.getSender().hasPermission("dynamictools.commands.addmodifier"))
                     .then(Commands.argument("modifier", StringArgumentType.word()).suggests(this::modifierSuggestions)
                             .executes(ctx -> addModifierCommand(ctx, 1, false))
@@ -243,6 +269,129 @@ public class CoreCommands {
         Schedulers.runFor(p, () -> openGUI(gui.apply(p).getInventory(), p));
         ctx.getSource().getSender().sendMessage(MiniMessage.miniMessage().deserialize("<green>Opened the " + guiName + " for " + p.getName()));
         return Command.SINGLE_SUCCESS;
+    }
+
+    private static Player resolvePlayer(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        return ctx.getArgument("player", PlayerSelectorArgumentResolver.class).resolve(ctx.getSource()).getFirst();
+    }
+
+    /***
+     * @return the player to give items to: the given player, or the sender if none was given. Null (with a message) if the
+     * sender isn't a player and didn't give one.
+     */
+    private static Player getTarget(CommandSender sender, Player target) {
+        if (target != null) {
+            return target;
+        }
+        if (sender instanceof Player p) {
+            return p;
+        }
+        sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Please specify a player!"));
+        return null;
+    }
+
+    /***
+     * Gives items to a player on their own thread (Folia) and tells the sender.
+     */
+    private static void giveItem(CommandSender sender, Player target, ItemStack item, Component name) {
+        int amount = item.getAmount();
+        // The other player can be on a different thread on Folia
+        Schedulers.runFor(target, () -> ItemManager.addOrDropItem(item, target));
+        Component message = Component.text(sender == target ? "Gave you " : "Gave " + target.getName() + " ", NamedTextColor.GREEN)
+                .append(Component.text(amount > 1 ? amount + "x " : "a ", NamedTextColor.GREEN))
+                .append(name);
+        sender.sendMessage(message);
+    }
+
+    /***
+     * Gives a part item. Unless bypassChecks is true, the material has to be able to make the part.
+     */
+    private int givePartCommand(CommandContext<CommandSourceStack> ctx, Player target, int amount, boolean bypassChecks) {
+        CommandSender sender = ctx.getSource().getSender();
+        Player p = getTarget(sender, target);
+        if (p == null) {
+            return Command.SINGLE_SUCCESS;
+        }
+
+        String partName = StringArgumentType.getString(ctx, "partType");
+        PartType partType;
+        try {
+            partType = PartType.valueOf(partName.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Invalid part type " + partName));
+            return Command.SINGLE_SUCCESS;
+        }
+        String materialName = StringArgumentType.getString(ctx, "material");
+        ToolMaterial material = ToolMaterial.fromId(materialName.toLowerCase(Locale.ROOT));
+        if (material == null) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Invalid material " + materialName));
+            return Command.SINGLE_SUCCESS;
+        }
+        if (!bypassChecks && !material.getValidParts().contains(partType)) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>" + material.getId() + " can't be used to make a " + partType.getDisplayName()
+                    + ". Add true to the end of the command to give it anyway."));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        ItemStack part = plugin.getPartManager().getNewPartStack(partType, material);
+        if (part == null) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>The " + partType.getDisplayName() + " item isn't loaded in "
+                    + plugin.getCustomItemSourceName() + ". Check the console and reload it."));
+            return Command.SINGLE_SUCCESS;
+        }
+        part.setAmount(amount);
+        giveItem(sender, p, part, MiniMessage.miniMessage().deserialize(material.getDisplayName() + " " + partType.getDisplayName()));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /***
+     * Gives the Part Crafter or Part Assembler block, if it's enabled with custom-block in config.yml.
+     */
+    private int giveMiscCommand(CommandContext<CommandSourceStack> ctx, Player target, int amount) {
+        CommandSender sender = ctx.getSource().getSender();
+        Player p = getTarget(sender, target);
+        if (p == null) {
+            return Command.SINGLE_SUCCESS;
+        }
+
+        String itemName = StringArgumentType.getString(ctx, "item").toLowerCase(Locale.ROOT);
+        CustomBlocks.CustomBlock block = CustomBlocks.fromId(itemName);
+        if (block == null) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Unknown item " + itemName));
+            return Command.SINGLE_SUCCESS;
+        }
+        if (!block.isEnabled()) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>The " + itemName + " block is turned off. Set " + block.configSection()
+                    + ".custom-block to true in config.yml to use it."));
+            return Command.SINGLE_SUCCESS;
+        }
+        ItemStack item = CustomBlocks.getBlockItem(block);
+        if (item == null) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>The " + itemName + " block isn't loaded in "
+                    + plugin.getCustomItemSourceName() + " yet. Reload it to load the block."));
+            return Command.SINGLE_SUCCESS;
+        }
+        item.setAmount(amount);
+        // The name the item shows in game, whether the item plugin set it as a custom name or an item name
+        giveItem(sender, p, item, item.effectiveName());
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private CompletableFuture<Suggestions> partTypeSuggestions(CommandContext<CommandSourceStack> ctx, final SuggestionsBuilder builder) {
+        Arrays.stream(PartType.values())
+                .map(type -> type.name().toLowerCase(Locale.ROOT))
+                .filter(name -> name.startsWith(builder.getRemainingLowerCase()))
+                .forEach(builder::suggest);
+        return builder.buildFuture();
+    }
+
+    private CompletableFuture<Suggestions> miscItemSuggestions(CommandContext<CommandSourceStack> ctx, final SuggestionsBuilder builder) {
+        CustomBlocks.ALL.stream()
+                .filter(CustomBlocks.CustomBlock::isEnabled)
+                .map(CustomBlocks.CustomBlock::id)
+                .filter(id -> id.startsWith(builder.getRemainingLowerCase()))
+                .forEach(builder::suggest);
+        return builder.buildFuture();
     }
 
     private int giveCommand(CommandContext<CommandSourceStack> ctx, Player p, CommandSender sender, boolean bypassChecks) {
