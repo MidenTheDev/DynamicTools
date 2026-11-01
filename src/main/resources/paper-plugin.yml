@@ -24,11 +24,15 @@ permissions:
     default: op
   dynamictools.commands.open:
     default: op
+  dynamictools.commands.inspect:
+    default: true
   dynamictools.commands.generatetextures:
     default: op
   dynamictools.commands.reload:
     default: op
   dynamictools.commands.addmodifier:
+    default: op
+  dynamictools.commands.rebuild:
     default: op
   dynamictools.commands.open.others:
     default: op

@@ -38,7 +38,7 @@ public class Tool {
     private static final DynamicTools plugin = DynamicTools.getPlugin(DynamicTools.class);
 
     // Same number format vanilla uses for attribute tooltips
-    private static final DecimalFormat STAT_FORMAT = new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ROOT));
+    public static final DecimalFormat STAT_FORMAT = new DecimalFormat("#.##", DecimalFormatSymbols.getInstance(Locale.ROOT));
 
     private final ItemStack item;
 
@@ -54,6 +54,8 @@ public class Tool {
     private Map<Modifier,Integer> modifiers;
     // Modifiers added on top of the materials' modifiers, e.g. with /dt addModifier
     private Map<Modifier,Integer> bonusModifiers;
+    // The tool's final stats, after modifiers
+    private ToolStats stats;
 
 
     /* Mining Levels
@@ -212,6 +214,7 @@ public class Tool {
             }
         });
         plugin.getModifierManager().setModifiers(item, modifiers);
+        this.stats = stats;
 
         // Store the custom attributes for other plugins to read
         item.editPersistentDataContainer(pdc -> stats.getCustomAttributes().forEach((id, value) -> {
@@ -426,6 +429,13 @@ public class Tool {
 
     public ItemStack getItemStack() {
         return item;
+    }
+
+    /***
+     * @return the tool's final stats, after its materials and modifiers
+     */
+    public ToolStats getStats() {
+        return stats;
     }
 
     public ToolType getToolType() {

@@ -56,3 +56,21 @@ assembler:
     fill-material: GRAY_STAINED_GLASS_PANE
     pointer-material: ARROW
     # Item between the part slots and the result slot
+
+tool-inspector:
+  # Opened with /dt inspect. Put a tool in it to see each of its materials, where its modifiers come from,
+  # and how every stat is worked out from the parts. Parts can be put in too, to see what they're used for and their stats.
+  gui:
+    title: "Tool Inspector"
+    # MiniMessage formatting is supported
+    fill-empty-slots: true
+    # Fill the unused slots with the fill material
+    fill-material: GRAY_STAINED_GLASS_PANE
+    pointer-material: ARROW
+    # Item between the tool slot and the info
+    stats-material: BOOK
+    # Item showing the stat breakdown
+    modifiers-material: ENCHANTED_BOOK
+    # Item showing the modifiers and where they come from
+    attributes-material: NAME_TAG
+    # Item showing the custom attributes

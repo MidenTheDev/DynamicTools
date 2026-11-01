@@ -27,6 +27,7 @@ import us.to.midensthings.dynamicTools.parts.PartType;
 import us.to.midensthings.dynamicTools.gui.DynamicToolsGui;
 import us.to.midensthings.dynamicTools.gui.PartAssembler;
 import us.to.midensthings.dynamicTools.gui.PartCrafter;
+import us.to.midensthings.dynamicTools.gui.ToolInspector;
 import us.to.midensthings.dynamicTools.modifiers.Modifier;
 import us.to.midensthings.dynamicTools.resourcepack.ResourcePackGenerator;
 import us.to.midensthings.dynamicTools.tools.Tool;
@@ -106,6 +107,12 @@ public class CoreCommands {
                                     .then(Commands.argument("bypassToolTypes", BoolArgumentType.bool())
                                             .executes(ctx -> addModifierCommand(ctx, IntegerArgumentType.getInteger(ctx, "level"),
                                                     BoolArgumentType.getBool(ctx, "bypassToolTypes")))))))
+            // Rebuilds the tool in the sender's hand with the current materials.yml
+            .then(Commands.literal("rebuild").requires(source -> source.getSender().hasPermission("dynamictools.commands.rebuild"))
+                    .executes(ctx -> rebuildCommand(ctx.getSource().getSender())))
+            // Opens the Tool Inspector, players use this to look at their tools' stats
+            .then(Commands.literal("inspect").requires(source -> source.getSender().hasPermission("dynamictools.commands.inspect"))
+                    .executes(ctx -> openForSender(ctx, ToolInspector::new)))
             .then(Commands.literal("reload").requires(source -> source.getSender().hasPermission("dynamictools.commands.reload"))
                     .executes(ctx -> reloadCommand(ctx.getSource().getSender())))
             .then(Commands.literal("generateTextures").requires(source -> source.getSender().hasPermission("dynamictools.commands.generatetextures"))
@@ -118,6 +125,10 @@ public class CoreCommands {
                     .then(Commands.literal("partAssembler").executes(ctx -> openForSender(ctx, PartAssembler::new))
                             .then(Commands.argument("player",ArgumentTypes.player()).requires(source -> source.getSender().hasPermission("dynamictools.commands.open.others"))
                                     .executes(ctx -> openForPlayer(ctx, PartAssembler::new, "Part Assembler"))))
+
+                    .then(Commands.literal("toolInspector").executes(ctx -> openForSender(ctx, ToolInspector::new))
+                            .then(Commands.argument("player",ArgumentTypes.player()).requires(source -> source.getSender().hasPermission("dynamictools.commands.open.others"))
+                                    .executes(ctx -> openForPlayer(ctx, ToolInspector::new, "Tool Inspector"))))
             )
 
             .build();
@@ -168,6 +179,35 @@ public class CoreCommands {
         sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Added ").append(MiniMessage.miniMessage().deserialize(modifier.getDisplayName()))
                 .append(MiniMessage.miniMessage().deserialize("<green> " + RomanNumerals.toRoman(level) + " to your " + tool.getToolType().getDisplayName()
                         + " (now level " + RomanNumerals.toRoman(tool.getModifiers().get(modifier)) + ").")));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    /***
+     * Rebuilds the tool in the sender's main hand from its parts with the current materials.yml, without changing anything
+     * else about it: it keeps its damage, enchantments, name, anvil repair cost and the modifiers added to it by command.
+     */
+    private int rebuildCommand(CommandSender sender) {
+        if (!(sender instanceof Player p)) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>Only players can use this command, it rebuilds the tool in your hand."));
+            return Command.SINGLE_SUCCESS;
+        }
+        ItemStack held = p.getInventory().getItemInMainHand();
+        if (!ToolItems.isTool(held)) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>You need to hold a DynamicTools tool."));
+            return Command.SINGLE_SUCCESS;
+        }
+        Tool tool = Tool.fromItemStack(held, null);
+        if (tool == null) {
+            sender.sendMessage(MiniMessage.miniMessage().deserialize("<red>This tool is made from a material that no longer exists, so it can't be rebuilt."));
+            return Command.SINGLE_SUCCESS;
+        }
+
+        tool.copyPlayerChanges(held);
+        ItemStack result = tool.getItemStack();
+        result.setAmount(held.getAmount());
+        p.getInventory().setItemInMainHand(result);
+        sender.sendMessage(MiniMessage.miniMessage().deserialize("<green>Rebuilt your ").append(tool.generateDisplayNameComponent())
+                .append(MiniMessage.miniMessage().deserialize("<green> with the current material stats.")));
         return Command.SINGLE_SUCCESS;
     }
 
