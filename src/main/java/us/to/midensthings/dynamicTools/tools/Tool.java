@@ -137,6 +137,11 @@ public class Tool {
             pdc.set(NamespacedKeys.primaryMaterial, PersistentDataType.STRING, primaryMaterial.getId());
             pdc.set(NamespacedKeys.secondaryMaterial, PersistentDataType.STRING, secondaryMaterial.getId());
             pdc.set(NamespacedKeys.tertiaryMaterial, PersistentDataType.STRING, tertiaryMaterial.getId());
+
+            // Custom data from the materials, binding first and head last, so the head's value wins if two materials set the same key
+            for (ToolMaterial material : List.of(tertiaryMaterial, secondaryMaterial, primaryMaterial)) {
+                material.getCustomData().forEach(data -> data.apply(pdc));
+            }
         });
 
         // Set data components of the item:
@@ -194,12 +199,27 @@ public class Tool {
             stats.setArmor(armorStat);
             stats.setArmorToughness(armorToughnessStat);
         }
+        // Custom attributes are weighted like attack damage (see CustomAttribute.calculate), before modifiers so they can change them
+        for (CustomAttribute attribute : plugin.getCustomAttributes().values()) {
+            Double value = attribute.calculate(primaryMaterial, secondaryMaterial, tertiaryMaterial);
+            if (value != null) {
+                stats.setCustomAttribute(attribute.id(), value);
+            }
+        }
         modifiers.forEach((modifier, level) -> {
             if (modifier instanceof StatModifier statModifier) {
                 statModifier.apply(stats, level);
             }
         });
         plugin.getModifierManager().setModifiers(item, modifiers);
+
+        // Store the custom attributes for other plugins to read
+        item.editPersistentDataContainer(pdc -> stats.getCustomAttributes().forEach((id, value) -> {
+            CustomAttribute attribute = plugin.getCustomAttributes().get(id);
+            if (attribute != null) {
+                pdc.set(attribute.key(), PersistentDataType.DOUBLE, value);
+            }
+        }));
 
         EquipmentSlotGroup attributeSlot = toolType.getAttributeSlot();
         ItemAttributeModifiers.Builder mods = ItemAttributeModifiers.itemAttributes();
@@ -276,6 +296,12 @@ public class Tool {
         for (ToolStats.ExtraAttribute extra : extraAttributes) {
             lore.add(extraAttributeLine(extra));
         }
+        stats.getCustomAttributes().forEach((id, value) -> {
+            CustomAttribute attribute = plugin.getCustomAttributes().get(id);
+            if (attribute != null && attribute.displayOnTools()) {
+                lore.add(customAttributeLine(attribute, value, toolType));
+            }
+        });
         item.setData(DataComponentTypes.LORE, ItemLore.lore(lore));
         item.setData(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplay.tooltipDisplay()
                 .addHiddenComponents(DataComponentTypes.ATTRIBUTE_MODIFIERS)
@@ -343,6 +369,19 @@ public class Tool {
                 .append(Component.translatable("attribute.modifier." + (positive ? "plus." : "take.") + operation,
                         Component.text(STAT_FORMAT.format(Math.abs(amount))), Component.translatable(extra.attribute())))
                 .color(positive ? NamedTextColor.BLUE : NamedTextColor.RED)
+                .decoration(TextDecoration.ITALIC, false);
+    }
+
+    /***
+     * Formats a custom attribute's display-name (MiniMessage) with %final_value% replaced by its value.
+     * Without its own color it matches the tool's other stats: dark green on tools and weapons, e.g. " 1.5 Example Speed",
+     * and blue on armor, like vanilla's armor lines.
+     */
+    private static Component customAttributeLine(CustomAttribute attribute, double value, ToolType toolType) {
+        String line = attribute.displayName().replace("%final_value%", STAT_FORMAT.format(value));
+        return Component.space()
+                .append(MiniMessage.miniMessage().deserialize(line))
+                .colorIfAbsent(toolType.isArmor() ? NamedTextColor.BLUE : NamedTextColor.DARK_GREEN)
                 .decoration(TextDecoration.ITALIC, false);
     }
 

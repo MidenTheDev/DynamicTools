@@ -20,7 +20,15 @@ public class ItemsAdderBlockRecipes implements Listener {
     // ItemsAdder fires this after loading its items, and again after every /iazip
     @EventHandler
     public void onItemsAdderLoad(ItemsAdderLoadDataEvent e) {
-        Schedulers.runGlobal(this::registerRecipes);
+        Schedulers.runGlobal(() -> {
+            registerRecipes();
+            // ItemsAdder started before DynamicTools added its files, so reload it now that its first load is done.
+            // The reload fires this event again, which registers the recipes for the newly loaded blocks.
+            if (plugin.takeSourceReload()) {
+                plugin.getLogger().info("Reloading ItemsAdder to load the files DynamicTools added");
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "iazip");
+            }
+        });
     }
 
     private void registerRecipes() {

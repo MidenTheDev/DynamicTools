@@ -13,6 +13,7 @@ import us.to.midensthings.dynamicTools.gui.DynamicToolsGui;
 import us.to.midensthings.dynamicTools.commands.CoreCommands;
 import us.to.midensthings.dynamicTools.commands.DebugCommands;
 import us.to.midensthings.dynamicTools.compat.CraftEngineCompat;
+import us.to.midensthings.dynamicTools.compat.CraftEngineStartupReload;
 import us.to.midensthings.dynamicTools.compat.ItemsAdderBlockRecipes;
 import us.to.midensthings.dynamicTools.compat.ItemsAdderCompat;
 import us.to.midensthings.dynamicTools.events.GuiListener;
@@ -24,6 +25,8 @@ import us.to.midensthings.dynamicTools.modifiers.ModifierRegistry;
 import us.to.midensthings.dynamicTools.modifiers.builtin.*;
 import us.to.midensthings.dynamicTools.parts.PartType;
 import us.to.midensthings.dynamicTools.resourcepack.ResourcePackGenerator;
+import us.to.midensthings.dynamicTools.tools.CustomAttribute;
+import us.to.midensthings.dynamicTools.tools.CustomItemData;
 import us.to.midensthings.dynamicTools.tools.MaterialColors;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
 import us.to.midensthings.dynamicTools.tools.ToolMaterialRegistry;
@@ -38,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
 public final class DynamicTools extends JavaPlugin {
@@ -48,12 +52,17 @@ public final class DynamicTools extends JavaPlugin {
     
     // volatile because /dt reload replaces these while other region threads may be reading them on Folia
     private volatile ToolMaterialRegistry toolMaterialRegistry;
+    // The attributes from custom-attributes.yml, by ID
+    private volatile Map<String, CustomAttribute> customAttributes = Map.of();
+    File customAttributesFile = new File(this.getDataFolder()+"/custom-attributes.yml");
     private PartManager partManager;
     private ModifierRegistry modifierRegistry;
     private ModifierManager modifierManager;
     private AddonLoader addonLoader;
     
     private PluginManager pm;
+    // Set when the custom item plugin started before DynamicTools added its files, see onSourceFilesChanged
+    private final AtomicBoolean sourceNeedsReload = new AtomicBoolean(false);
     private CustomItemSource customItemSource;
     
     private List<String> enabledCompats;
@@ -90,7 +99,10 @@ public final class DynamicTools extends JavaPlugin {
         pm.registerEvents(new VanillaRecipeListener(), this);
         pm.registerEvents(new WorkstationListener(), this);
         if (customItemSource == CustomItemSource.ITEMSADDER) {
+            // Also reloads ItemsAdder after its first load if it started before DynamicTools added its files
             pm.registerEvents(new ItemsAdderBlockRecipes(), this);
+        } else {
+            pm.registerEvents(new CraftEngineStartupReload(), this);
         }
 
         registerCommands();
@@ -107,8 +119,10 @@ public final class DynamicTools extends JavaPlugin {
 
     private void loadConfigs() {
         getLogger().info("Loading configurations");
-        getConfig().options().copyDefaults();
+        // Write config.yml before reading it. Reading it first loads an empty config on a fresh install, and options read
+        // with their own fallback (e.g. custom-block) would then use that fallback instead of the defaults in config.yml.
         saveDefaultConfig();
+        reloadConfig();
 
         if (!materialsFile.exists()) {
             getLogger().info("Generating materials.yml");
@@ -136,18 +150,46 @@ public final class DynamicTools extends JavaPlugin {
         if (customItemSource == null) {
             return;
         }
-        switch (customItemSource) {
-            case ITEMSADDER -> {
-                if (ItemsAdderCompat.installConfigs()) {
-                    getLogger().warning("Added DynamicTools configs to ItemsAdder. Run /iazip to load them.");
-                }
-            }
-            case CRAFTENGINE -> {
-                if (CraftEngineCompat.installConfigs()) {
-                    getLogger().warning("Added DynamicTools configs to CraftEngine. Run /ce reload all to load them.");
-                }
-            }
+        boolean added = switch (customItemSource) {
+            case ITEMSADDER -> ItemsAdderCompat.installConfigs();
+            case CRAFTENGINE -> CraftEngineCompat.installConfigs();
+        };
+        if (added) {
+            onSourceFilesChanged("item and block configs");
         }
+    }
+
+    /***
+     * @return the plugin name of the custom item source
+     */
+    public String getCustomItemSourceName() {
+        return switch (customItemSource) {
+            case ITEMSADDER -> "ItemsAdder";
+            case CRAFTENGINE -> "CraftEngine";
+        };
+    }
+
+    /***
+     * Called when DynamicTools adds or changes files in the custom item plugin's folders while starting. If that plugin
+     * already started before DynamicTools (e.g. it loads at STARTUP), it has already read its files and won't see these,
+     * so it gets reloaded once the server has finished starting. If it hasn't started yet, it loads them itself.
+     */
+    private void onSourceFilesChanged(String what) {
+        if (pm.isPluginEnabled(getCustomItemSourceName())) {
+            sourceNeedsReload.set(true);
+            getLogger().info("Added DynamicTools " + what + " to " + getCustomItemSourceName()
+                    + " after it already started, so it will reload them once the server has finished starting");
+        } else {
+            debug("Added DynamicTools " + what + " to " + getCustomItemSourceName() + " before it started");
+        }
+    }
+
+    /***
+     * @return true if the custom item plugin has to reload to see files DynamicTools added while starting.
+     * Only returns true once, so the reload only runs once.
+     */
+    public boolean takeSourceReload() {
+        return sourceNeedsReload.getAndSet(false);
     }
 
     @Override
@@ -198,6 +240,8 @@ public final class DynamicTools extends JavaPlugin {
         this.addonLoader = new AddonLoader();
         addonLoader.loadAddons();
 
+        // Custom attributes have to be loaded before the materials that set them
+        this.customAttributes = CustomAttribute.loadAll(loadCustomAttributesFile());
         this.toolMaterialRegistry = loadToolMaterials();
 
         this.partManager = new PartManager();
@@ -218,9 +262,15 @@ public final class DynamicTools extends JavaPlugin {
         new YamlConfiguration().load(new File(getDataFolder(), "config.yml"));
         YamlConfiguration newMaterialsConf = new YamlConfiguration();
         newMaterialsConf.load(materialsFile);
+        if (!customAttributesFile.exists()) {
+            saveResource("custom-attributes.yml", false);
+        }
+        YamlConfiguration newCustomAttributesConf = new YamlConfiguration();
+        newCustomAttributesConf.load(customAttributesFile);
 
         reloadConfig();
         materialsConf = newMaterialsConf;
+        customAttributes = CustomAttribute.loadAll(newCustomAttributesConf);
         toolMaterialRegistry = loadToolMaterials();
         if (modifierRegistry.getModifier("beheading") instanceof BeheadingModifier beheading) {
             beheading.loadHeads();
@@ -304,7 +354,10 @@ public final class DynamicTools extends JavaPlugin {
                     validParts,
                     materialsConf.getStringList(mat+".materials"),
                     modifiers,
-                    loadMaterialColors(mat)
+                    loadMaterialColors(mat),
+                    CustomItemData.load(materialsConf.getConfigurationSection(mat+".custom-data"), mat),
+                    materialsConf.getDouble(mat+".material-cost-ratio", 1.0),
+                    CustomAttribute.loadMaterialValues(materialsConf.getConfigurationSection(mat+".custom-attributes"), customAttributes, mat)
             );
 
             registry.registerToolMaterial(material);
@@ -350,8 +403,8 @@ public final class DynamicTools extends JavaPlugin {
             int changed = new ResourcePackGenerator().generate(assetsFolder);
             debug(changed + " resource pack files changed in " + assetsFolder);
             if (changed > 0) {
-                getLogger().info("Updated " + changed + " resource pack files in " + assetsFolder
-                        + (customItemSource == CustomItemSource.ITEMSADDER ? ". Run /iazip if ItemsAdder has already built its pack." : ". Run /ce reload all if CraftEngine has already built its pack."));
+                getLogger().info("Updated " + changed + " resource pack files in " + assetsFolder);
+                onSourceFilesChanged("textures and models");
             }
         } catch (IOException e) {
             getLogger().log(Level.SEVERE, "Could not generate the resource pack files", e);
@@ -415,6 +468,24 @@ public final class DynamicTools extends JavaPlugin {
 
     public ModifierRegistry getModifierRegistry() {
         return modifierRegistry;
+    }
+
+    /***
+     * @return the attributes from custom-attributes.yml, by ID
+     */
+    public Map<String, CustomAttribute> getCustomAttributes() {
+        return customAttributes;
+    }
+
+    /***
+     * Reads custom-attributes.yml, creating it if it doesn't exist.
+     */
+    private YamlConfiguration loadCustomAttributesFile() {
+        if (!customAttributesFile.exists()) {
+            getLogger().info("Generating custom-attributes.yml");
+            saveResource("custom-attributes.yml", false);
+        }
+        return YamlConfiguration.loadConfiguration(customAttributesFile);
     }
 
     public ModifierManager getModifierManager() {

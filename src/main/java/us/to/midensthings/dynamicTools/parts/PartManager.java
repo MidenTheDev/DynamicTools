@@ -49,6 +49,8 @@ public class PartManager {
         item.editPersistentDataContainer(pdc -> {
             pdc.set(NamespacedKeys.partType, PersistentDataType.STRING,partType.name());
             pdc.set(NamespacedKeys.partMaterial, PersistentDataType.STRING,toolMaterial.getId());
+            // The material's custom-data, which tools made with the part also get
+            toolMaterial.getCustomData().forEach(data -> data.apply(pdc));
         });
 
         return item;

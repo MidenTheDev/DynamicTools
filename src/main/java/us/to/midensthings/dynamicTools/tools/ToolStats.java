@@ -4,7 +4,9 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /***
  * The stats of a tool while it's being built, after the materials have been applied. StatModifiers change these.
@@ -25,6 +27,8 @@ public class ToolStats {
     private double armor;
     private double armorToughness;
     private final List<ExtraAttribute> extraAttributes = new ArrayList<>();
+    // The tool's values for the attributes in custom-attributes.yml, by attribute ID. Only attributes its materials set.
+    private final Map<String, Double> customAttributes = new LinkedHashMap<>();
 
     public ToolStats(double attackDamage, double attackSpeed, double durability, double digSpeed) {
         this.attackDamage = attackDamage;
@@ -91,5 +95,23 @@ public class ToolStats {
 
     public void setArmorToughness(double armorToughness) {
         this.armorToughness = armorToughness;
+    }
+
+    /***
+     * @return the tool's value for a custom attribute from custom-attributes.yml, or null if the tool doesn't have it
+     */
+    public Double getCustomAttribute(String id) {
+        return customAttributes.get(id);
+    }
+
+    /***
+     * Sets the tool's value for a custom attribute from custom-attributes.yml, adding it if the tool doesn't have it yet.
+     */
+    public void setCustomAttribute(String id, double value) {
+        customAttributes.put(id, value);
+    }
+
+    public Map<String, Double> getCustomAttributes() {
+        return customAttributes;
     }
 }

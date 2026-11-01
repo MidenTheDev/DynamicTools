@@ -3,7 +3,8 @@ package us.to.midensthings.dynamicTools.parts;
 import java.util.Locale;
 
 public enum PartType {
-    // Material cost is how many material items the Part Crafter uses to make one of the part.
+    // Material cost is how many material items the Part Crafter uses to make one of the part,
+    // before the material's material-cost-ratio is applied.
     // Tool heads match the vanilla recipe's material count.
 
     // Common

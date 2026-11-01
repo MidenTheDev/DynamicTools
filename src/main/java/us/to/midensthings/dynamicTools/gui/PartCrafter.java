@@ -97,7 +97,8 @@ public class PartCrafter implements DynamicToolsGui {
             if (preview == null) {
                 continue;
             }
-            addCostLore(preview, partType.getMaterialCost(), input.getAmount() >= partType.getMaterialCost());
+            int cost = material.getMaterialCost(partType);
+            addCostLore(preview, cost, input.getAmount() >= cost);
             inv.setItem(outputSlots[index], preview);
             outputParts.put(outputSlots[index], partType);
             index++;
@@ -126,14 +127,19 @@ public class PartCrafter implements DynamicToolsGui {
     public ItemStack createPart(PartType partType) {
         ItemStack input = inv.getItem(inputSlot);
         ToolMaterial material = ToolMaterial.fromItemStack(input);
-        if (material == null || !material.getValidParts().contains(partType) || input.getAmount() < partType.getMaterialCost()) {
+        if (material == null || !material.getValidParts().contains(partType) || input.getAmount() < material.getMaterialCost(partType)) {
             return null;
         }
         return plugin.getPartManager().getNewPartStack(partType, material);
     }
 
+    /***
+     * Uses up the input for a part, using the input material's cost for it.
+     */
     public void consumeInput(PartType partType) {
-        GuiItems.subtract(inv, inputSlot, partType.getMaterialCost());
+        ToolMaterial material = ToolMaterial.fromItemStack(inv.getItem(inputSlot));
+        int cost = material == null ? partType.getMaterialCost() : material.getMaterialCost(partType);
+        GuiItems.subtract(inv, inputSlot, cost);
     }
 
     @Override

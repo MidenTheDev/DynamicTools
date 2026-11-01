@@ -1,0 +1,17 @@
+# Custom stats for tools, e.g. for other plugins to read. Materials set their values in materials.yml under custom-attributes,
+# and each tool's final value is stored in its persistent data container as a DOUBLE under namespace:id
+# (e.g. dynamictools:example).
+#
+# Each attribute's ID (the key below) can only use lowercase letters, numbers, _ - . and /, with:
+#   namespace: the namespace of the key it's stored under. Defaults to dynamictools.
+#   display-on-tools: show the value in the tool's stats lore. Defaults to false.
+#   display-name: the lore line, MiniMessage formatting is supported. %final_value% is replaced by the value.
+#                 Without a color it matches the tool's other stats: dark green on tools and weapons, blue on armor.
+#   default-value: the value for materials that don't set one. Defaults to 0.
+#   default-multiplier: the multiplier for materials that don't set one. Defaults to 1.
+example:
+  namespace: dynamictools
+  display-on-tools: true
+  display-name: "+%final_value% Example Speed"
+  default-value: 0.0
+  default-multiplier: 1.0

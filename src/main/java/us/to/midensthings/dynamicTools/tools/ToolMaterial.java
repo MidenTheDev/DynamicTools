@@ -52,8 +52,15 @@ public class ToolMaterial {
     private final Set<Material> inputItems = new HashSet<>();
     private final Set<String> inputCustomItems = new HashSet<>();
 
-    // Map for other attributes this material modifies?
-    private Map<String,?> attributeMap;
+    // Data from custom-attributes, added to the persistent data container of tools made with this material
+    private List<CustomItemData> customData;
+
+    // Multiplies how many of this material the Part Crafter uses for each part
+    private double materialCostRatio;
+
+    // This material's values for the attributes in custom-attributes.yml, by attribute ID
+    private Map<String, CustomAttribute.MaterialValue> customAttributes;
+
     // The modifiers this material gives tools and their levels
     private Map<Modifier,Integer> modifiers;
 
@@ -62,7 +69,7 @@ public class ToolMaterial {
 
 
 
-    public ToolMaterial(String id, double durability, double durabilityMultiplier, double attackDamage, double attackDamageMultiplier, double attackSpeed, double attackSpeedMultiplier, double digSpeed, double digSpeedMultiplier, double armor, double armorMultiplier, double armorToughness, double armorToughnessMultiplier, double armorDurability, int miningLevel, String displayName, List<PartType> validParts, List<String> validInputMaterials, Map<Modifier,Integer> modifiers, MaterialColors colors) {
+    public ToolMaterial(String id, double durability, double durabilityMultiplier, double attackDamage, double attackDamageMultiplier, double attackSpeed, double attackSpeedMultiplier, double digSpeed, double digSpeedMultiplier, double armor, double armorMultiplier, double armorToughness, double armorToughnessMultiplier, double armorDurability, int miningLevel, String displayName, List<PartType> validParts, List<String> validInputMaterials, Map<Modifier,Integer> modifiers, MaterialColors colors, List<CustomItemData> customData, double materialCostRatio, Map<String, CustomAttribute.MaterialValue> customAttributes) {
         this.id = id;
         this.durability = durability;
         this.durabilityMultiplier = durabilityMultiplier;
@@ -83,6 +90,9 @@ public class ToolMaterial {
         this.validInputMaterials = validInputMaterials;
         this.modifiers = modifiers;
         this.colors = colors;
+        this.customData = customData;
+        this.materialCostRatio = materialCostRatio;
+        this.customAttributes = customAttributes;
         parseInputMaterials();
     }
 
@@ -239,10 +249,6 @@ public class ToolMaterial {
         return miningLevel;
     }
 
-    public Map<String, ?> getAttributeMap() {
-        return attributeMap;
-    }
-
     public double getAttackSpeed() {
         return attackSpeed;
     }
@@ -271,5 +277,31 @@ public class ToolMaterial {
      */
     public MaterialColors getColors() {
         return colors;
+    }
+
+    /***
+     * @return the data from custom-attributes in materials.yml, added to tools made with this material
+     */
+    public List<CustomItemData> getCustomData() {
+        return customData;
+    }
+
+    /***
+     * @return this material's values for the attributes in custom-attributes.yml, by attribute ID
+     */
+    public Map<String, CustomAttribute.MaterialValue> getCustomAttributes() {
+        return customAttributes;
+    }
+
+    public double getMaterialCostRatio() {
+        return materialCostRatio;
+    }
+
+    /***
+     * @return how many of this material the Part Crafter uses to make the part: the part's standard cost times the
+     * material-cost-ratio, rounded down, and at least 1
+     */
+    public int getMaterialCost(PartType partType) {
+        return Math.max(1, (int) Math.floor(partType.getMaterialCost() * materialCostRatio));
     }
 }

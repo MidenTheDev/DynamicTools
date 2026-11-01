@@ -8,6 +8,21 @@
 # stats.armorDurability: the durability of armor made with this material, separate from tool durability.
 #   Use vanilla's armor durability multipliers to match vanilla armor: leather 5, gold 7, copper 11, iron/chainmail 15,
 #   diamond 33, netherite 37. Defaults to 15. Armor also uses the durability multiplier.
+# material-cost-ratio: (optional) multiplies how many of this material the Part Crafter uses for each part. The part's
+#   standard cost times the ratio, rounded down, with a minimum of 1. e.g. 0.5 makes a chestplate frame (6) cost 3.
+#   Defaults to 1.
+# custom-data: (optional) data added to the persistent data container of parts and tools made with this material,
+#   e.g. for other plugins to read. Each entry has any name, with:
+#     namespaced-key: the key, e.g. "myplugin:some_key". Only lowercase letters, numbers, _ - . and /. No namespace = dynamictools.
+#     data-type: BYTE, SHORT, INTEGER, LONG, FLOAT, DOUBLE, BOOLEAN or STRING
+#     value: the value
+#   If two of a tool's materials set the same key, the head's (or armor frame's) value is used, then the handle's (core's).
+# custom-attributes: (optional) this material's values for the stats defined in custom-attributes.yml, by attribute ID:
+#     value: the material's value (defaults to the attribute's default-value)
+#     multiplier: the material's multiplier (defaults to the attribute's default-multiplier)
+#   Tools get (head value + 1/2 handle value + 1/2 binding value) X (mean multiplier of the three parts), like attack damage.
+#   Parts made of materials that don't set the attribute use its defaults. Tools only get the attribute if at least
+#   one of their materials sets it.
 # modifiers: (optional) the modifiers tools made with this material get, as modifier ID: level
 #   Each modifier only applies to the tool types it supports (e.g. frigid only goes on weapons), so a material can list
 #   separate modifiers for different kinds of tools.
@@ -184,6 +199,16 @@ netherite:
     dark: "#1d161c"
   materials:
     - "#minecraft:netherite_tool_materials"
+  material-cost-ratio: 0.5
+  custom-attributes:
+    example:
+      value: 1.5
+      multiplier: 1.0
+  custom-data:
+    example:
+      namespaced-key: "dynamictools:example_type"
+      data-type: STRING
+      value: "example"
   stats:
     durability: 780
     attackDamage: 4
