@@ -69,8 +69,6 @@ tool-inspector:
     pointer-material: ARROW
     # Item between the tool slot and the info
     stats-material: BOOK
-    # Item showing the stat breakdown
+    # Item showing the stat breakdown, including the custom attributes
     modifiers-material: ENCHANTED_BOOK
     # Item showing the modifiers and where they come from
-    attributes-material: NAME_TAG
-    # Item showing the custom attributes

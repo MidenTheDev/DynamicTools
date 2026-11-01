@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.ToDoubleFunction;
 
@@ -49,7 +48,6 @@ public class ToolInspector implements DynamicToolsGui {
     private ItemStack pointerMaterial;
     private Material statsMaterial;
     private Material modifiersMaterial;
-    private Material attributesMaterial;
     String inventoryDisplayName;
 
     private final Player p;
@@ -57,10 +55,16 @@ public class ToolInspector implements DynamicToolsGui {
     private final int inputSlot = 10;
     private final int pointerSlot = 11;
     // Head/frame, handle/core and binding
-    private final int[] partSlots = {12, 13, 14};
+    // The parts in a column like the Part Assembler, by primary, secondary and tertiary part:
+    // head or frame at the top, handle or core at the bottom, binding in the middle
+    private final int[] partSlots = {4, 22, 13};
+    // Where a part put in the inspector is shown
+    private final int partInfoSlot = 13;
     private final int statsSlot = 15;
-    private final int modifiersSlot = 16;
-    private final int attributesSlot = 17;
+    // Stats past the first few go on a second item, as too many on one item runs off the screen
+    private final int statsContinuedSlot = 16;
+    private final int modifiersSlot = 17;
+    private static final int STATS_PER_ITEM = 4;
 
     private final int rows = 3;
 
@@ -80,7 +84,6 @@ public class ToolInspector implements DynamicToolsGui {
         pointerMaterial = GuiItems.createDecoration(config.getString("tool-inspector.gui.pointer-material"), Material.ARROW);
         statsMaterial = iconMaterial(config.getString("tool-inspector.gui.stats-material"), Material.BOOK);
         modifiersMaterial = iconMaterial(config.getString("tool-inspector.gui.modifiers-material"), Material.ENCHANTED_BOOK);
-        attributesMaterial = iconMaterial(config.getString("tool-inspector.gui.attributes-material"), Material.NAME_TAG);
 
         this.inv = Bukkit.createInventory(this, rows*9, MiniMessage.miniMessage().deserialize(inventoryDisplayName));
         clearInfo();
@@ -137,9 +140,14 @@ public class ToolInspector implements DynamicToolsGui {
         for (int i = 0; i < 3; i++) {
             inv.setItem(partSlots[i], partItem(tool, materials, parts, formulas, i));
         }
-        inv.setItem(statsSlot, statsItem(tool, materials, formulas));
+        List<List<Component>> statBlocks = statBlocks(tool, materials, formulas);
+        inv.setItem(statsSlot, infoItem(new ItemStack(statsMaterial), text("Stats", NamedTextColor.WHITE),
+                joinBlocks(statBlocks.subList(0, Math.min(STATS_PER_ITEM, statBlocks.size())))));
+        if (statBlocks.size() > STATS_PER_ITEM) {
+            inv.setItem(statsContinuedSlot, infoItem(new ItemStack(statsMaterial), text("Stats (continued)", NamedTextColor.WHITE),
+                    joinBlocks(statBlocks.subList(STATS_PER_ITEM, statBlocks.size()))));
+        }
         inv.setItem(modifiersSlot, modifiersItem(tool, materials));
-        inv.setItem(attributesSlot, attributesItem(tool, materials));
     }
 
     /***
@@ -186,7 +194,7 @@ public class ToolInspector implements DynamicToolsGui {
         int cost = material.getMaterialCost(partType);
         partLore.add(Component.empty());
         partLore.add(text("Part Crafter cost: " + cost + " material" + (cost == 1 ? "" : "s"), NamedTextColor.GRAY));
-        inv.setItem(partSlots[0], infoItem(input.clone(), mm(material.getDisplayName() + " " + partType.getDisplayName()), partLore));
+        inv.setItem(partInfoSlot, infoItem(input.clone(), mm(material.getDisplayName() + " " + partType.getDisplayName()), partLore));
 
         // The material's stats
         List<Component> statsLore = new ArrayList<>();
@@ -195,6 +203,7 @@ public class ToolInspector implements DynamicToolsGui {
                     .append(text(format(stat.value().applyAsDouble(material)), NamedTextColor.WHITE))
                     .append(text("  (x" + format(stat.multiplier().applyAsDouble(material)) + " multiplier)", NamedTextColor.DARK_GRAY)));
         }
+        statsLore.addAll(materialAttributeLines(material));
         statsLore.add(Component.empty());
         statsLore.add(text("Tools get: head + half the handle + half the binding,", NamedTextColor.DARK_GRAY));
         statsLore.add(text("times the average multiplier of the three parts.", NamedTextColor.DARK_GRAY));
@@ -214,15 +223,6 @@ public class ToolInspector implements DynamicToolsGui {
         }
         inv.setItem(modifiersSlot, infoItem(new ItemStack(modifiersMaterial), text("Modifiers", NamedTextColor.WHITE), modifierLore));
 
-        // The material's custom attributes
-        List<Component> attributeLore = new ArrayList<>();
-        material.getCustomAttributes().forEach((id, value) -> attributeLore.add(text(id + ": ", NamedTextColor.GRAY)
-                .append(text(format(value.value()), NamedTextColor.WHITE))
-                .append(text("  (x" + format(value.multiplier()) + " multiplier)", NamedTextColor.DARK_GRAY))));
-        if (attributeLore.isEmpty()) {
-            attributeLore.add(text("This material has no custom attributes.", NamedTextColor.GRAY));
-        }
-        inv.setItem(attributesSlot, infoItem(new ItemStack(attributesMaterial), text("Custom Attributes", NamedTextColor.WHITE), attributeLore));
     }
 
     private void clearInfo() {
@@ -231,8 +231,8 @@ public class ToolInspector implements DynamicToolsGui {
             inv.setItem(slot, empty);
         }
         inv.setItem(statsSlot, empty);
+        inv.setItem(statsContinuedSlot, empty);
         inv.setItem(modifiersSlot, empty);
-        inv.setItem(attributesSlot, empty);
     }
 
     /***
@@ -281,11 +281,7 @@ public class ToolInspector implements DynamicToolsGui {
                     .append(text("  (x" + format(formula.multiplier().applyAsDouble(material)) + " multiplier)", NamedTextColor.DARK_GRAY)));
         }
 
-        for (Map.Entry<String, CustomAttribute.MaterialValue> entry : material.getCustomAttributes().entrySet()) {
-            lore.add(text(entry.getKey() + ": ", NamedTextColor.GRAY)
-                    .append(text(format(entry.getValue().value()), NamedTextColor.WHITE))
-                    .append(text("  (x" + format(entry.getValue().multiplier()) + " multiplier)", NamedTextColor.DARK_GRAY)));
-        }
+        lore.addAll(materialAttributeLines(material));
 
         // A material's modifiers only count once, even if it makes more than one part
         boolean countedEarlier = materials.subList(0, index).contains(material);
@@ -307,11 +303,13 @@ public class ToolInspector implements DynamicToolsGui {
     }
 
     /***
-     * Every stat's final value and how it's worked out from the parts.
+     * Every stat's final value and how it's worked out from the parts, one block of lines per stat,
+     * followed by the custom attributes.
      */
-    private ItemStack statsItem(Tool tool, List<ToolMaterial> materials, List<StatFormula> formulas) {
-        List<Component> lore = new ArrayList<>();
+    private List<List<Component>> statBlocks(Tool tool, List<ToolMaterial> materials, List<StatFormula> formulas) {
+        List<List<Component>> blocks = new ArrayList<>();
         for (StatFormula formula : formulas) {
+            List<Component> lore = new ArrayList<>();
             double head = formula.value().applyAsDouble(materials.get(0));
             double handle = formula.value().applyAsDouble(materials.get(1));
             double binding = formula.value().applyAsDouble(materials.get(2));
@@ -319,9 +317,6 @@ public class ToolInspector implements DynamicToolsGui {
                     + formula.multiplier().applyAsDouble(materials.get(2))) / 3;
             double base = formula.typeModifier() * (head + 0.5 * handle + 0.5 * binding) * meanMultiplier;
 
-            if (!lore.isEmpty()) {
-                lore.add(Component.empty());
-            }
             lore.add(text(formula.name() + ": ", NamedTextColor.WHITE).append(text(format(formula.finalValue()), NamedTextColor.GREEN)));
             lore.addAll(breakdown(tool.getToolType(), materials, head, handle, binding));
             if (formula.typeModifier() != 1) {
@@ -332,8 +327,39 @@ public class ToolInspector implements DynamicToolsGui {
             if (Math.abs(fromModifiers) >= 0.005) {
                 lore.add(text("  " + (fromModifiers > 0 ? "+" : "") + format(fromModifiers) + " from modifiers", NamedTextColor.GRAY));
             }
+            blocks.add(lore);
         }
-        return infoItem(new ItemStack(statsMaterial), text("Stats", NamedTextColor.WHITE), lore);
+        blocks.addAll(attributeBlocks(tool, materials));
+        return blocks;
+    }
+
+    /***
+     * @return the blocks of lines, with an empty line between each
+     */
+    private static List<Component> joinBlocks(List<List<Component>> blocks) {
+        List<Component> lore = new ArrayList<>();
+        for (List<Component> block : blocks) {
+            if (!lore.isEmpty()) {
+                lore.add(Component.empty());
+            }
+            lore.addAll(block);
+        }
+        return lore;
+    }
+
+    /***
+     * A material's custom attribute values, e.g. "example: 1.5  (x1 multiplier)". Attributes with a value of zero are left out.
+     */
+    private static List<Component> materialAttributeLines(ToolMaterial material) {
+        List<Component> lines = new ArrayList<>();
+        material.getCustomAttributes().forEach((id, value) -> {
+            if (value.value() != 0) {
+                lines.add(text(id + ": ", NamedTextColor.GRAY)
+                        .append(text(format(value.value()), NamedTextColor.WHITE))
+                        .append(text("  (x" + format(value.multiplier()) + " multiplier)", NamedTextColor.DARK_GRAY)));
+            }
+        });
+        return lines;
     }
 
     /***
@@ -379,13 +405,14 @@ public class ToolInspector implements DynamicToolsGui {
     }
 
     /***
-     * Each custom attribute on the tool and how it's worked out from the parts.
+     * Each custom attribute on the tool and how it's worked out from the parts, as blocks in the same layout as the normal stats.
+     * Attributes with a final value of zero are left out.
      */
-    private ItemStack attributesItem(Tool tool, List<ToolMaterial> materials) {
-        List<Component> lore = new ArrayList<>();
+    private List<List<Component>> attributeBlocks(Tool tool, List<ToolMaterial> materials) {
+        List<List<Component>> blocks = new ArrayList<>();
         tool.getStats().getCustomAttributes().forEach((id, finalValue) -> {
             CustomAttribute attribute = plugin.getCustomAttributes().get(id);
-            if (attribute == null) {
+            if (attribute == null || finalValue == 0) {
                 return;
             }
             CustomAttribute.MaterialValue fallback = new CustomAttribute.MaterialValue(attribute.defaultValue(), attribute.defaultMultiplier());
@@ -394,9 +421,7 @@ public class ToolInspector implements DynamicToolsGui {
             double meanMultiplier = (values.get(0).multiplier() + values.get(1).multiplier() + values.get(2).multiplier()) / 3;
             double base = (values.get(0).value() + 0.5 * values.get(1).value() + 0.5 * values.get(2).value()) * meanMultiplier;
 
-            if (!lore.isEmpty()) {
-                lore.add(Component.empty());
-            }
+            List<Component> lore = new ArrayList<>();
             lore.add(text(id + ": ", NamedTextColor.WHITE).append(text(format(finalValue), NamedTextColor.GREEN)));
             lore.addAll(breakdown(tool.getToolType(), materials, values.get(0).value(), values.get(1).value(), values.get(2).value()));
             lore.add(text("  x" + format(meanMultiplier) + " average multiplier", NamedTextColor.GRAY));
@@ -405,11 +430,9 @@ public class ToolInspector implements DynamicToolsGui {
                 lore.add(text("  " + (fromModifiers > 0 ? "+" : "") + format(fromModifiers) + " from modifiers", NamedTextColor.GRAY));
             }
             lore.add(text("  Stored as " + attribute.key(), NamedTextColor.DARK_GRAY));
+            blocks.add(lore);
         });
-        if (lore.isEmpty()) {
-            lore.add(text("This tool has no custom attributes.", NamedTextColor.GRAY));
-        }
-        return infoItem(new ItemStack(attributesMaterial), text("Custom Attributes", NamedTextColor.WHITE), lore);
+        return blocks;
     }
 
     /***
