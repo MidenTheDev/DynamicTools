@@ -84,7 +84,7 @@ If you are a developer looking to CREATE addons, check the plugin's [Wiki](https
 ## ❓ FAQ:
 
 #### Q:  I Need Help! X Isn't working!
-**A: ** Check the relevant Wiki page. If the Wiki isn't helpful or you otherwise don't understand, join the [Discord Server](https://discord.gg/qUEcgsDN7T) and ask for support there.
+**A:** Check the relevant Wiki page. If the Wiki isn't helpful or you otherwise don't understand, join the [Discord Server](https://discord.gg/qUEcgsDN7T) and ask for support there.
 
 #### Q: Why does this plugin only support Paper and not Spigot?
 **A:** This plugin makes extensive use of Paper's api, using a wide variety of features that simply are not supported on Spigot. While creating a plugin that does the same thing on Spigot is theoretically possible, it would be a massive undertaking and would not function nearly as seamlessly.
