@@ -1,5 +1,8 @@
 config-version: '1.0'
 
+check-for-updates: true
+# Checks Modrinth on startup and logs a message if a newer release is available.
+
 block-vanilla-tools: false
 # Whether or not to prevent the crafting of vanilla tools (including netherite upgrades in the smithing table and maces).
 # Repairing vanilla tools by combining them still works.

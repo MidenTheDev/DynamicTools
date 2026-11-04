@@ -9,6 +9,7 @@ import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.Player;
 import us.to.midensthings.dynamicTools.addons.AddonLoader;
+import us.to.midensthings.dynamicTools.util.UpdateTracker;
 import us.to.midensthings.dynamicTools.gui.DynamicToolsGui;
 import us.to.midensthings.dynamicTools.commands.CoreCommands;
 import us.to.midensthings.dynamicTools.commands.DebugCommands;
@@ -59,6 +60,7 @@ public final class DynamicTools extends JavaPlugin {
     private ModifierRegistry modifierRegistry;
     private ModifierManager modifierManager;
     private AddonLoader addonLoader;
+    private UpdateTracker updateTracker;
     
     private PluginManager pm;
     // Set when the custom item plugin started before DynamicTools added its files, see onSourceFilesChanged
@@ -106,6 +108,11 @@ public final class DynamicTools extends JavaPlugin {
         }
 
         registerCommands();
+
+        if (getConfig().getBoolean("check-for-updates", true)) {
+            this.updateTracker = new UpdateTracker();
+            updateTracker.checkForUpdates();
+        }
     }
 
     private void registerCommands() {
@@ -490,6 +497,10 @@ public final class DynamicTools extends JavaPlugin {
 
     public ModifierManager getModifierManager() {
         return modifierManager;
+    }
+
+    public UpdateTracker getUpdateTracker() {
+        return updateTracker;
     }
 
     public AddonLoader getAddonLoader() {
