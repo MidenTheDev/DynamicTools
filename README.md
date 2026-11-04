@@ -56,7 +56,7 @@ Materials can have multiple modifiers as well, simply add them to the material's
 Stacking modifiers, however, must be done with separate materials. Using the same material multiple times will only grant the specified modifier once. If you want, say,
 Reinforced 2, you will need to make the tool out of two different materials which have the Reinforced modifier.
 
-New modifiers can be created either via the Plugin's API or the Plugin's dedicated Addon system. See the wiki for more details.
+New modifiers can be created either via the Plugin's API or the Plugin's dedicated Addon system. See the [wiki](https://github.com/MidenTheDev/DynamicTools/wiki/API-and-Addons#creating-an-addon) for more details.
 
 ## 💻 Commands:
 **/dt reload** - Reloads the plugin configuration. This command will NOT load any new addons (restart your server) or generate any textures (/dt generateTextures).
@@ -79,7 +79,7 @@ Modifiers to the plugin, as tool materials are handled by the materials.yml file
 
 If you are looking to DOWNLOAD addons made by community members, visit the plugin's [Discord Server](https://discord.gg/qUEcgsDN7T).
 
-If you are a developer looking to CREATE addons, check the plugin's Wiki for details on how to get started.
+If you are a developer looking to CREATE addons, check the plugin's [Wiki](https://github.com/MidenTheDev/DynamicTools/wiki/API-and-Addons#creating-an-addon) for details on how to get started.
 
 ## ❓ FAQ:
 
