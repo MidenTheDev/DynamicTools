@@ -9,9 +9,16 @@
 #                 Without a color it matches the tool's other stats: dark green on tools and weapons, blue on armor.
 #   default-value: the value for materials that don't set one. Defaults to 0.
 #   default-multiplier: the multiplier for materials that don't set one. Defaults to 1.
+#   valid-tool-types: the tool types that get this attribute, e.g. PICKAXE, SWORD or CHESTPLATE. Other tools don't store
+#                     or show it. Leave it out for every tool type.
 example:
   namespace: dynamictools
   display-on-tools: true
   display-name: "+%final_value% Example Speed"
   default-value: 0.0
   default-multiplier: 1.0
+  valid-tool-types:
+    - PICKAXE
+    - AXE
+    - HOE
+    - SHOVEL

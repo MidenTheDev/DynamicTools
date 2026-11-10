@@ -4,9 +4,13 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import us.to.midensthings.dynamicTools.DynamicTools;
 
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /***
  * A custom stat from custom-attributes.yml, e.g. for other plugins to read. Materials give it a value and multiplier,
@@ -18,9 +22,10 @@ import java.util.Map;
  * @param displayName the lore line (MiniMessage), with %final_value% replaced by the value
  * @param defaultValue the value for materials that don't set one
  * @param defaultMultiplier the multiplier for materials that don't set one
+ * @param validToolTypes the tool types that get this attribute, all of them if valid-tool-types isn't set
  */
 public record CustomAttribute(String id, NamespacedKey key, boolean displayOnTools, String displayName,
-                              double defaultValue, double defaultMultiplier) {
+                              double defaultValue, double defaultMultiplier, Set<ToolType> validToolTypes) {
     private static final DynamicTools plugin = DynamicTools.getPlugin(DynamicTools.class);
 
     /***
@@ -47,9 +52,40 @@ public record CustomAttribute(String id, NamespacedKey key, boolean displayOnToo
                     config.getBoolean(id + ".display-on-tools", false),
                     config.getString(id + ".display-name", "%final_value% " + id),
                     config.getDouble(id + ".default-value", 0.0),
-                    config.getDouble(id + ".default-multiplier", 1.0)));
+                    config.getDouble(id + ".default-multiplier", 1.0),
+                    loadToolTypes(config.getStringList(id + ".valid-tool-types"), id)));
         }
         return attributes;
+    }
+
+    /***
+     * @return the tool types from valid-tool-types, or every tool type if the list is empty or missing.
+     * Unknown tool types are skipped with a warning.
+     */
+    private static Set<ToolType> loadToolTypes(List<String> names, String id) {
+        if (names.isEmpty()) {
+            return EnumSet.allOf(ToolType.class);
+        }
+        Set<ToolType> toolTypes = EnumSet.noneOf(ToolType.class);
+        for (String name : names) {
+            try {
+                toolTypes.add(ToolType.valueOf(name.toUpperCase(Locale.ROOT)));
+            } catch (IllegalArgumentException e) {
+                plugin.getLogger().warning("Unknown tool type " + name + " in valid-tool-types of custom attribute " + id
+                        + ". Use one of " + Arrays.toString(ToolType.values()));
+            }
+        }
+        if (toolTypes.isEmpty()) {
+            plugin.getLogger().warning("Custom attribute " + id + " has no valid tool types, so no tools will get it");
+        }
+        return toolTypes;
+    }
+
+    /***
+     * @return true if tools of this type get the attribute
+     */
+    public boolean appliesTo(ToolType toolType) {
+        return validToolTypes.contains(toolType);
     }
 
     /***

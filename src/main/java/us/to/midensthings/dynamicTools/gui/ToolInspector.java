@@ -29,6 +29,7 @@ import us.to.midensthings.dynamicTools.util.RomanNumerals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -203,7 +204,7 @@ public class ToolInspector implements DynamicToolsGui {
                     .append(text(format(stat.value().applyAsDouble(material)), NamedTextColor.WHITE))
                     .append(text("  (x" + format(stat.multiplier().applyAsDouble(material)) + " multiplier)", NamedTextColor.DARK_GRAY)));
         }
-        statsLore.addAll(materialAttributeLines(material));
+        statsLore.addAll(materialAttributeLines(material, usedIn));
         statsLore.add(Component.empty());
         statsLore.add(text("Tools get: head + half the handle + half the binding,", NamedTextColor.DARK_GRAY));
         statsLore.add(text("times the average multiplier of the three parts.", NamedTextColor.DARK_GRAY));
@@ -281,7 +282,7 @@ public class ToolInspector implements DynamicToolsGui {
                     .append(text("  (x" + format(formula.multiplier().applyAsDouble(material)) + " multiplier)", NamedTextColor.DARK_GRAY)));
         }
 
-        lore.addAll(materialAttributeLines(material));
+        lore.addAll(materialAttributeLines(material, List.of(tool.getToolType())));
 
         // A material's modifiers only count once, even if it makes more than one part
         boolean countedEarlier = materials.subList(0, index).contains(material);
@@ -348,12 +349,15 @@ public class ToolInspector implements DynamicToolsGui {
     }
 
     /***
-     * A material's custom attribute values, e.g. "example: 1.5  (x1 multiplier)". Attributes with a value of zero are left out.
+     * A material's custom attribute values, e.g. "example: 1.5  (x1 multiplier)". Attributes with a value of zero, and
+     * attributes that don't apply to any of the given tool types, are left out.
      */
-    private static List<Component> materialAttributeLines(ToolMaterial material) {
+    private static List<Component> materialAttributeLines(ToolMaterial material, Collection<ToolType> toolTypes) {
         List<Component> lines = new ArrayList<>();
         material.getCustomAttributes().forEach((id, value) -> {
-            if (value.value() != 0) {
+            CustomAttribute attribute = plugin.getCustomAttributes().get(id);
+            boolean applies = attribute != null && toolTypes.stream().anyMatch(attribute::appliesTo);
+            if (applies && value.value() != 0) {
                 lines.add(text(id + ": ", NamedTextColor.GRAY)
                         .append(text(format(value.value()), NamedTextColor.WHITE))
                         .append(text("  (x" + format(value.multiplier()) + " multiplier)", NamedTextColor.DARK_GRAY)));
@@ -412,7 +416,7 @@ public class ToolInspector implements DynamicToolsGui {
         List<List<Component>> blocks = new ArrayList<>();
         tool.getStats().getCustomAttributes().forEach((id, finalValue) -> {
             CustomAttribute attribute = plugin.getCustomAttributes().get(id);
-            if (attribute == null || finalValue == 0) {
+            if (attribute == null || finalValue == 0 || !attribute.appliesTo(tool.getToolType())) {
                 return;
             }
             CustomAttribute.MaterialValue fallback = new CustomAttribute.MaterialValue(attribute.defaultValue(), attribute.defaultMultiplier());

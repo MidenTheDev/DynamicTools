@@ -203,6 +203,10 @@ public class Tool {
         }
         // Custom attributes are weighted like attack damage (see CustomAttribute.calculate), before modifiers so they can change them
         for (CustomAttribute attribute : plugin.getCustomAttributes().values()) {
+            // Only the tool types listed in the attribute's valid-tool-types get it
+            if (!attribute.appliesTo(toolType)) {
+                continue;
+            }
             Double value = attribute.calculate(primaryMaterial, secondaryMaterial, tertiaryMaterial);
             if (value != null) {
                 stats.setCustomAttribute(attribute.id(), value);
@@ -219,7 +223,8 @@ public class Tool {
         // Store the custom attributes for other plugins to read
         item.editPersistentDataContainer(pdc -> stats.getCustomAttributes().forEach((id, value) -> {
             CustomAttribute attribute = plugin.getCustomAttributes().get(id);
-            if (attribute != null) {
+            // Also checked here in case a modifier set an attribute this tool type doesn't get
+            if (attribute != null && attribute.appliesTo(toolType)) {
                 pdc.set(attribute.key(), PersistentDataType.DOUBLE, value);
             }
         }));
@@ -301,7 +306,7 @@ public class Tool {
         }
         stats.getCustomAttributes().forEach((id, value) -> {
             CustomAttribute attribute = plugin.getCustomAttributes().get(id);
-            if (attribute != null && attribute.displayOnTools()) {
+            if (attribute != null && attribute.displayOnTools() && attribute.appliesTo(toolType)) {
                 lore.add(customAttributeLine(attribute, value, toolType));
             }
         });
