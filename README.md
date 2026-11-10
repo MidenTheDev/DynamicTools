@@ -25,7 +25,7 @@ By mixing and matching parts made of different materials, you can create tools t
 but has a low mining level and low durability. By taking a Netherite Pickaxe head, which has high durability and a relatively high mining speed and making the rest
 of the tool out of gold, you can create a tool with an incredibly high mining speed and decent durability:
 
-INSERT DEMO GIF HERE
+![](https://github.com/MidenTheDev/PageResources/blob/main/Assembler_demo.gif?raw=true)
 
 The plugin will also automatically generate all of the textures you need to get started, and ships with a set of configs and settings that match Vanilla.
 In order to load the custom items, the plugin will hook into whatever custom item plugin you have present. The upside of this means that the resource pack generation
@@ -46,7 +46,7 @@ Below is a list of plugins the plugin supports for custom items:
 Different materials can have different Modifiers attached to them that further alter a crafted tool's behavior and stats. Modifiers, for the most part, behave similarlyto enchants, even having levels which affect the strength of the modifier. For example, Netherite has the Fireproof
 modifier which grants tools made of Netherite the fire-resistant property that vanilla Netherite has.
 
-INSERT DEMO GIF HERE
+![](https://github.com/MidenTheDev/PageResources/blob/main/Modifier_demo.gif?raw=true)
 
 The plugin comes with a large set of modifiers that should suit most use cases of the plugin. The only modifiers that are in the default config are the Reinforced modifier
 and the Fireproof modifier, however. Other modifiers will need to be added to your materials manually. Click HERE for a list of all of the modifiers and how they work.
@@ -56,7 +56,7 @@ Materials can have multiple modifiers as well, simply add them to the material's
 Stacking modifiers, however, must be done with separate materials. Using the same material multiple times will only grant the specified modifier once. If you want, say,
 Reinforced 2, you will need to make the tool out of two different materials which have the Reinforced modifier.
 
-New modifiers can be created either via the Plugin's API or the Plugin's dedicated Addon system. See the wiki for more details.
+New modifiers can be created either via the Plugin's API or the Plugin's dedicated Addon system. See the [wiki](https://github.com/MidenTheDev/DynamicTools/wiki/API-and-Addons#creating-an-addon) for more details.
 
 ## 💻 Commands:
 **/dt reload** - Reloads the plugin configuration. This command will NOT load any new addons (restart your server) or generate any textures (/dt generateTextures).
@@ -65,8 +65,13 @@ New modifiers can be created either via the Plugin's API or the Plugin's dedicat
 
 **/dt generateTextures** - Re-generates the plugin's automatically generated textures.s
 
-**/dt give [toolType] [material] [material] [material] {player} [true/false]** - Gives you (or the specified player) a copy of the specified tool made of the specified materials.
+**/dt give [part/tool/misc] [details] {player} [true/false]** - Gives you (or the specified player) a copy of the specified item.
 
+**/dt addModifier [modifier] [level] [true/false]** - Adds the specified Modifier to the tool you are holding.
+
+**/dt rebuild** - Rebuilds the tool you are currently holding to use the any changes made to stats in materials.yml
+
+**/dt inpsect** - Opens a GUI that allows you to inspect the stats and info about an inserted tool or part
 
 ## ➕ Addons:
 DynamicTools supports the ability for users to create Addons that are automatically loaded by the plugin during startup. As of now, Addons are used solely to add more
@@ -74,12 +79,12 @@ Modifiers to the plugin, as tool materials are handled by the materials.yml file
 
 If you are looking to DOWNLOAD addons made by community members, visit the plugin's [Discord Server](https://discord.gg/qUEcgsDN7T).
 
-If you are a developer looking to CREATE addons, check the plugin's Wiki for details on how to get started.
+If you are a developer looking to CREATE addons, check the plugin's [Wiki](https://github.com/MidenTheDev/DynamicTools/wiki/API-and-Addons#creating-an-addon) for details on how to get started.
 
 ## ❓ FAQ:
 
 #### Q:  I Need Help! X Isn't working!
-**A: ** Check the relevant Wiki page. If the Wiki isn't helpful or you otherwise don't understand, join the [Discord Server](https://discord.gg/qUEcgsDN7T) and ask for support there.
+**A:** Check the relevant Wiki page. If the Wiki isn't helpful or you otherwise don't understand, join the [Discord Server](https://discord.gg/qUEcgsDN7T) and ask for support there.
 
 #### Q: Why does this plugin only support Paper and not Spigot?
 **A:** This plugin makes extensive use of Paper's api, using a wide variety of features that simply are not supported on Spigot. While creating a plugin that does the same thing on Spigot is theoretically possible, it would be a massive undertaking and would not function nearly as seamlessly.
