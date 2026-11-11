@@ -69,6 +69,14 @@ public class ItemsAdderCompat {
     }
 
     /***
+     * @return a new instance of any ItemsAdder item by its namespaced ID (e.g. "my_items:ruby"), or null if ItemsAdder doesn't have it loaded.
+     */
+    public static ItemStack getItem(String id) {
+        CustomStack stack = CustomStack.getInstance(id);
+        return stack == null ? null : stack.getItemStack();
+    }
+
+    /***
      * @return the namespaced ID of the ItemsAdder item (e.g. "my_items:ruby"), or null if it isn't an ItemsAdder item.
      */
     public static String getCustomItemId(ItemStack item) {

@@ -74,6 +74,14 @@ public class CraftEngineCompat {
     }
 
     /***
+     * @return a new instance of any CraftEngine item by its namespaced ID (e.g. "my_items:ruby"), or null if CraftEngine doesn't have it loaded.
+     */
+    public static ItemStack getItem(String id) {
+        BukkitItemDefinition definition = CraftEngineItems.byId(Key.of(id));
+        return definition == null ? null : definition.buildBukkitItem();
+    }
+
+    /***
      * @return the namespaced ID of the CraftEngine item (e.g. "my_items:ruby"), or null if it isn't a CraftEngine item.
      */
     public static String getCustomItemId(ItemStack item) {

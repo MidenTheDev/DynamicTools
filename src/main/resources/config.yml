@@ -38,7 +38,9 @@ part-crafter:
     fill-empty-slots: true
     # Fill the unused slots with the fill material
     fill-material: GRAY_STAINED_GLASS_PANE
+    # A vanilla item, or the namespaced ID of an ItemsAdder/CraftEngine item (e.g. my_items:fancy_pane)
     pointer-material: ARROW
+    # Also accepts custom item IDs, like fill-material
     # Item between the input slot and the parts
 
 
@@ -57,7 +59,9 @@ assembler:
     fill-empty-slots: true
     # Fill the unused slots with the fill material
     fill-material: GRAY_STAINED_GLASS_PANE
+    # A vanilla item, or the namespaced ID of an ItemsAdder/CraftEngine item (e.g. my_items:fancy_pane)
     pointer-material: ARROW
+    # Also accepts custom item IDs, like fill-material
     # Item between the part slots and the result slot
 
 tool-inspector:
@@ -69,7 +73,9 @@ tool-inspector:
     fill-empty-slots: true
     # Fill the unused slots with the fill material
     fill-material: GRAY_STAINED_GLASS_PANE
+    # A vanilla item, or the namespaced ID of an ItemsAdder/CraftEngine item (e.g. my_items:fancy_pane)
     pointer-material: ARROW
+    # Also accepts custom item IDs, like fill-material
     # Item between the tool slot and the info
     stats-material: BOOK
     # Item showing the stat breakdown, including the custom attributes
