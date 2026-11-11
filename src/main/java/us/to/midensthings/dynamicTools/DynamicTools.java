@@ -242,6 +242,9 @@ public final class DynamicTools extends JavaPlugin {
         modifierRegistry.registerModifier(new WitheringModifier());
         modifierRegistry.registerModifier(new BeheadingModifier());
         modifierRegistry.registerModifier(new LifestealModifier());
+        modifierRegistry.registerModifier(new LightModifier());
+        modifierRegistry.registerModifier(new ConduitModifier());
+        modifierRegistry.registerModifier(new DiamondTippedModifier());
 
         // Addons register their modifiers in onLoad, which also has to happen before the materials are loaded
         this.addonLoader = new AddonLoader();

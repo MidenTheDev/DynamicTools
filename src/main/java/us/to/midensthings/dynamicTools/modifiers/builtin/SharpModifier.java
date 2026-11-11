@@ -1,14 +1,16 @@
 package us.to.midensthings.dynamicTools.modifiers.builtin;
 
+import us.to.midensthings.dynamicTools.modifiers.PartSlot;
 import us.to.midensthings.dynamicTools.modifiers.StatModifier;
 import us.to.midensthings.dynamicTools.tools.ToolStats;
 import us.to.midensthings.dynamicTools.tools.ToolType;
 import us.to.midensthings.dynamicTools.util.TypeSets;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 /***
- * Increases the tool's attack damage by 1 per level
+ * Increases the tool's attack damage by 1 per level. Only applies when the material is used for the head.
  */
 public class SharpModifier implements StatModifier {
     @Override
@@ -29,5 +31,10 @@ public class SharpModifier implements StatModifier {
     @Override
     public Set<ToolType> getValidToolTypes() {
         return TypeSets.onlyWeapons;
+    }
+
+    @Override
+    public Set<PartSlot> getValidPartSlots() {
+        return EnumSet.of(PartSlot.PRIMARY);
     }
 }

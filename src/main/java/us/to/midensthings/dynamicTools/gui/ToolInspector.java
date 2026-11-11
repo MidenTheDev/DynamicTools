@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import us.to.midensthings.dynamicTools.modifiers.PartSlot;
 import us.to.midensthings.dynamicTools.DynamicTools;
 import us.to.midensthings.dynamicTools.modifiers.Modifier;
 import us.to.midensthings.dynamicTools.parts.Part;
@@ -214,7 +215,7 @@ public class ToolInspector implements DynamicToolsGui {
         List<Component> modifierLore = new ArrayList<>();
         material.getModifiers().forEach((modifier, level) -> {
             modifierLore.add(modifierName(modifier, level));
-            List<String> appliesTo = usedIn.stream().filter(type -> modifier.getValidToolTypes().contains(type))
+            List<String> appliesTo = usedIn.stream().filter(type -> appliesInPart(modifier, type, partType))
                     .map(ToolType::getDisplayName).toList();
             modifierLore.add(text(appliesTo.isEmpty() ? "  Doesn't apply to any tool this part makes"
                     : "  On: " + String.join(", ", appliesTo), NamedTextColor.GRAY));
@@ -288,7 +289,7 @@ public class ToolInspector implements DynamicToolsGui {
         boolean countedEarlier = materials.subList(0, index).contains(material);
         List<Component> modifierLines = new ArrayList<>();
         material.getModifiers().forEach((modifier, level) -> {
-            if (modifier.getValidToolTypes().contains(tool.getToolType())) {
+            if (modifier.appliesTo(tool.getToolType(), PartSlot.fromIndex(index))) {
                 modifierLines.add(modifierName(modifier, level));
             }
         });
@@ -384,6 +385,31 @@ public class ToolInspector implements DynamicToolsGui {
     }
 
     /***
+     * @return true if the modifier applies to the tool type when the part is in any of the slots it can go in
+     */
+    private static boolean appliesInPart(Modifier modifier, ToolType toolType, PartType partType) {
+        List<PartType> parts = toolType.getParts();
+        for (int i = 0; i < parts.size(); i++) {
+            if (parts.get(i) == partType && modifier.appliesTo(toolType, PartSlot.fromIndex(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /***
+     * @return true if the modifier applies in any of the parts the material is used for
+     */
+    private static boolean appliesFromMaterial(Modifier modifier, ToolType toolType, List<ToolMaterial> materials, ToolMaterial material) {
+        for (int i = 0; i < materials.size(); i++) {
+            if (materials.get(i).equals(material) && modifier.appliesTo(toolType, PartSlot.fromIndex(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /***
      * Each modifier on the tool and where its levels come from.
      */
     private ItemStack modifiersItem(Tool tool, List<ToolMaterial> materials) {
@@ -393,7 +419,7 @@ public class ToolInspector implements DynamicToolsGui {
             lore.add(modifierName(modifier, level));
             for (ToolMaterial material : distinctMaterials) {
                 Integer fromMaterial = material.getModifiers().get(modifier);
-                if (fromMaterial != null && modifier.getValidToolTypes().contains(tool.getToolType())) {
+                if (fromMaterial != null && appliesFromMaterial(modifier, tool.getToolType(), materials, material)) {
                     lore.add(text("  " + RomanNumerals.toRoman(fromMaterial) + " from ", NamedTextColor.GRAY).append(mm(material.getDisplayName())));
                 }
             }

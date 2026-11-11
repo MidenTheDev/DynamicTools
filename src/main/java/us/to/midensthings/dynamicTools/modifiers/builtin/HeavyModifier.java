@@ -10,12 +10,16 @@ import us.to.midensthings.dynamicTools.util.TypeSets;
 import java.util.Set;
 
 /***
- * Increases knockback resistance by 0.5 for each level
+ * Increases knockback resistance with diminishing returns: each level adds half as much as the one before.
+ * Heavy III gives 0.25 per piece, so a full set of four is needed for complete knockback resistance,
+ * and no level gives more than 2/7 (about 0.286) per piece, so three pieces can never reach it.
  */
 public class HeavyModifier implements StatModifier {
     @Override
     public void apply(ToolStats stats, int level) {
-        stats.addAttribute(Attribute.KNOCKBACK_RESISTANCE,0.5*level, AttributeModifier.Operation.ADD_NUMBER);
+        double resistance = (2.0 / 7.0) * (1 - Math.pow(0.5, level));
+        // Rounded so Heavy III is exactly 0.25 and four pieces add up to exactly 1.0
+        stats.addAttribute(Attribute.KNOCKBACK_RESISTANCE, Math.round(resistance * 1000) / 1000.0, AttributeModifier.Operation.ADD_NUMBER);
     }
 
     @Override

@@ -19,6 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import us.to.midensthings.dynamicTools.DynamicTools;
 import us.to.midensthings.dynamicTools.modifiers.Modifier;
+import us.to.midensthings.dynamicTools.modifiers.PartSlot;
 import us.to.midensthings.dynamicTools.modifiers.StatModifier;
 import us.to.midensthings.dynamicTools.resourcepack.ResourcePackGenerator;
 import us.to.midensthings.dynamicTools.util.NamespacedKeys;
@@ -27,6 +28,7 @@ import us.to.midensthings.dynamicTools.util.RomanNumerals;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -89,7 +91,16 @@ public class Tool {
         this.secondaryMaterial = secondaryMaterial;
         this.tertiaryMaterial = tertiaryMaterial;
 
-        this.miningLevel = primaryMaterial.getMiningLevel();
+        // Modifiers are worked out first, as some change the mining level, which picks the base item
+        this.modifiers = collectModifiers(toolType, primaryMaterial, secondaryMaterial, tertiaryMaterial);
+        this.bonusModifiers = new LinkedHashMap<>(bonusModifiers);
+        bonusModifiers.forEach((modifier, level) -> modifiers.merge(modifier, level, Integer::sum));
+
+        int startingMiningLevel = primaryMaterial.getMiningLevel();
+        for (Map.Entry<Modifier, Integer> entry : modifiers.entrySet()) {
+            startingMiningLevel = entry.getKey().modifyMiningLevel(startingMiningLevel, entry.getValue());
+        }
+        this.miningLevel = startingMiningLevel;
 
 
         // Construct item
@@ -192,9 +203,6 @@ public class Tool {
                 ((primaryMaterial.getDurabilityMultiplier() + secondaryMaterial.getDurabilityMultiplier() + tertiaryMaterial.getDurabilityMultiplier()) / 3));
 
         // Apply modifiers to the stats from the materials
-        this.modifiers = collectModifiers(toolType, primaryMaterial, secondaryMaterial, tertiaryMaterial);
-        this.bonusModifiers = new LinkedHashMap<>(bonusModifiers);
-        bonusModifiers.forEach((modifier, level) -> modifiers.merge(modifier, level, Integer::sum));
         plugin.getModifierManager().setBonusModifiers(item, this.bonusModifiers);
         ToolStats stats = new ToolStats(damageStat, speedStat, toolType.isArmor() ? armorDurabilityStat : durabilityStat, digSpeedStat);
         if (toolType.isArmor()) {
@@ -336,22 +344,24 @@ public class Tool {
     }
 
     /***
-     * Gets the modifiers from the tool's materials that apply to this tool type. Levels from different materials add together,
-     * but a material used in more than one part only counts once.
+     * Gets the modifiers from the tool's materials that apply to this tool type and the parts the materials are in.
+     * Levels from different materials add together, but a material used in more than one part only counts once,
+     * as long as one of its parts is valid for the modifier.
+     * @param materials the primary, secondary and tertiary materials, in that order
      */
     private static Map<Modifier,Integer> collectModifiers(ToolType toolType, ToolMaterial... materials) {
-        Map<Modifier,Integer> modifiers = new LinkedHashMap<>();
-        Set<ToolMaterial> countedMaterials = new HashSet<>();
-        for (ToolMaterial material : materials) {
-            if (!countedMaterials.add(material)) {
-                continue;
-            }
-            material.getModifiers().forEach((modifier, level) -> {
-                if (modifier.getValidToolTypes().contains(toolType)) {
-                    modifiers.merge(modifier, level, Integer::sum);
-                }
-            });
+        // Every part each material is used in
+        Map<ToolMaterial, Set<PartSlot>> materialSlots = new LinkedHashMap<>();
+        for (int i = 0; i < materials.length; i++) {
+            materialSlots.computeIfAbsent(materials[i], material -> EnumSet.noneOf(PartSlot.class)).add(PartSlot.fromIndex(i));
         }
+
+        Map<Modifier,Integer> modifiers = new LinkedHashMap<>();
+        materialSlots.forEach((material, slots) -> material.getModifiers().forEach((modifier, level) -> {
+            if (slots.stream().anyMatch(slot -> modifier.appliesTo(toolType, slot))) {
+                modifiers.merge(modifier, level, Integer::sum);
+            }
+        }));
         return modifiers;
     }
 

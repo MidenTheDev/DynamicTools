@@ -8,12 +8,12 @@ import us.to.midensthings.dynamicTools.util.TypeSets;
 import java.util.Set;
 
 /***
- * Increases the tool's digSpeed by 0.35 per level
+ * Increases the tool's digSpeed by 0.8 per level
  */
 public class HasteModifier implements StatModifier {
     @Override
     public void apply(ToolStats stats, int level) {
-        stats.setDigSpeed(stats.getDigSpeed() + (0.35*level));
+        stats.setDigSpeed(stats.getDigSpeed() + (0.8*level));
     }
 
     @Override
