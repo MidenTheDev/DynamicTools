@@ -68,6 +68,7 @@ public final class DynamicTools extends JavaPlugin {
     private CustomItemSource customItemSource;
     
     private List<String> enabledCompats;
+    private boolean reliqueEnabled;
 
     File materialsFile = new File(this.getDataFolder()+"/materials.yml");
     volatile YamlConfiguration materialsConf;
@@ -457,6 +458,18 @@ public final class DynamicTools extends JavaPlugin {
         }
         
         // Load other compats after checking for a valid custom item plugin first
+        // Kept out of enabledCompats, which only lists custom item plugins
+        reliqueEnabled = pm.getPlugin("Relique") != null;
+        if (reliqueEnabled) {
+            this.getLogger().info("Relique found, relics will count towards custom attributes");
+        }
+    }
+
+    /***
+     * @return true if Relique is installed, so equipped relics count towards custom attributes
+     */
+    public boolean isReliqueEnabled() {
+        return reliqueEnabled;
     }
 
     /***

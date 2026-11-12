@@ -8,6 +8,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import us.to.midensthings.dynamicTools.DynamicTools;
+import us.to.midensthings.dynamicTools.compat.ReliqueCompat;
 import us.to.midensthings.dynamicTools.util.NamespacedKeys;
 
 import java.util.Arrays;
@@ -95,9 +96,10 @@ public record CustomAttribute(String id, NamespacedKey key, boolean displayOnToo
     }
 
     /***
-     * Gets the total value of this attribute across what an entity is using: the tools it holds in its main hand and
-     * the armor it's wearing. Like vanilla attributes, a tool only counts in the slot it gives its stats in, so a
-     * helmet held in the main hand or a sword in an armor slot doesn't add anything.
+     * Gets the total value of this attribute across what an entity is using: the tools it holds in its main hand,
+     * the armor it's wearing and, if Relique is installed, its equipped relics. Like vanilla attributes, a tool only
+     * counts in the slot it gives its stats in, so a helmet held in the main hand or a sword in an armor slot doesn't
+     * add anything. Any relic with the attribute counts, whether or not it's a DynamicTools item.
      * On Folia, call this on the entity's thread.
      * @param entity a player or any other entity that can hold and wear items
      * @return the sum of the attribute's values, or 0 if none of the items have it
@@ -116,6 +118,11 @@ public record CustomAttribute(String id, NamespacedKey key, boolean displayOnToo
             ToolType toolType = getToolType(item);
             if (toolType != null && toolType.getAttributeSlot().test(slot)) {
                 total += getValue(item);
+            }
+        }
+        if (plugin.isReliqueEnabled()) {
+            for (ItemStack relic : ReliqueCompat.getEquippedRelics(entity)) {
+                total += getValue(relic);
             }
         }
         return total;

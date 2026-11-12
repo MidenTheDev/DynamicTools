@@ -16,6 +16,10 @@ dependencies:
       join-classpath: true
       load: AFTER
       required: false
+    Relique:
+      join-classpath: true
+      load: AFTER
+      required: false
 
 permissions:
   dynamictools.commands.debug:
