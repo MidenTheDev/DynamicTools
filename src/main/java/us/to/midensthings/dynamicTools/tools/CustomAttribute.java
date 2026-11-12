@@ -2,7 +2,13 @@ package us.to.midensthings.dynamicTools.tools;
 
 import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.inventory.EntityEquipment;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import us.to.midensthings.dynamicTools.DynamicTools;
+import us.to.midensthings.dynamicTools.util.NamespacedKeys;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -86,6 +92,70 @@ public record CustomAttribute(String id, NamespacedKey key, boolean displayOnToo
      */
     public boolean appliesTo(ToolType toolType) {
         return validToolTypes.contains(toolType);
+    }
+
+    /***
+     * Gets the total value of this attribute across what an entity is using: the tools it holds in its main hand and
+     * the armor it's wearing. Like vanilla attributes, a tool only counts in the slot it gives its stats in, so a
+     * helmet held in the main hand or a sword in an armor slot doesn't add anything.
+     * On Folia, call this on the entity's thread.
+     * @param entity a player or any other entity that can hold and wear items
+     * @return the sum of the attribute's values, or 0 if none of the items have it
+     */
+    public double getValue(LivingEntity entity) {
+        EntityEquipment equipment = entity.getEquipment();
+        if (equipment == null) {
+            return 0;
+        }
+        double total = 0;
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            if (!entity.canUseEquipmentSlot(slot)) {
+                continue;
+            }
+            ItemStack item = equipment.getItem(slot);
+            ToolType toolType = getToolType(item);
+            if (toolType != null && toolType.getAttributeSlot().test(slot)) {
+                total += getValue(item);
+            }
+        }
+        return total;
+    }
+
+    /***
+     * @return the value of this attribute stored on the item, or 0 if it doesn't have one
+     */
+    public double getValue(ItemStack item) {
+        if (item == null || item.isEmpty()) {
+            return 0;
+        }
+        Double value = item.getPersistentDataContainer().get(key, PersistentDataType.DOUBLE);
+        return value == null ? 0 : value;
+    }
+
+    /***
+     * Gets the total value of a custom attribute across the tools an entity holds in its main hand and the armor it's
+     * wearing. See {@link #getValue(LivingEntity)}.
+     * @param id the attribute's ID in custom-attributes.yml
+     * @return the sum of the attribute's values, or 0 if none of the items have it or there's no attribute with that ID
+     */
+    public static double getValue(LivingEntity entity, String id) {
+        CustomAttribute attribute = plugin.getCustomAttributes().get(id);
+        return attribute == null ? 0 : attribute.getValue(entity);
+    }
+
+    /***
+     * @return the tool type of a DynamicTools tool, or null if the item isn't one
+     */
+    private static ToolType getToolType(ItemStack item) {
+        if (!ToolItems.isTool(item)) {
+            return null;
+        }
+        String name = item.getPersistentDataContainer().get(NamespacedKeys.toolType, PersistentDataType.STRING);
+        try {
+            return name == null ? null : ToolType.valueOf(name);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     /***
