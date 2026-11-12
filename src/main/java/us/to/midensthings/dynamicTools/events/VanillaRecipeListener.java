@@ -8,6 +8,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Container;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -29,9 +30,11 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.SmithingTransformRecipe;
 import org.bukkit.inventory.SmithingTrimRecipe;
+import org.bukkit.inventory.view.AnvilView;
 import us.to.midensthings.dynamicTools.DynamicTools;
 import us.to.midensthings.dynamicTools.tools.ToolItems;
 import us.to.midensthings.dynamicTools.tools.ToolMaterial;
+import us.to.midensthings.dynamicTools.util.Schedulers;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -125,9 +128,31 @@ public class VanillaRecipeListener implements Listener {
         }
 
         result.setData(DataComponentTypes.REPAIR_COST, baseCost * 2 + 1);
+        AnvilView view = e.getView();
         e.setResult(result);
-        e.getView().setRepairCost(cost);
-        e.getView().setRepairItemCountCost(itemsUsed);
+        view.setRepairCost(cost);
+        view.setRepairItemCountCost(itemsUsed);
+
+        // When vanilla doesn't see the material as a repair item for the base item (custom items, or a head material
+        // that isn't the base item's), Paper sets the cost to "denied" after this event, so the result can't be taken.
+        // Set the cost again once that has happened, as long as the anvil still holds the same items.
+        if (view.getPlayer() instanceof Player player) {
+            ItemStack toolSnapshot = tool.clone();
+            ItemStack materialSnapshot = material.clone();
+            int finalCost = cost;
+            int finalItemsUsed = itemsUsed;
+            Schedulers.runNextTick(player, () -> {
+                if (!(player.getOpenInventory() instanceof AnvilView openView)
+                        || !openView.getTopInventory().equals(view.getTopInventory())
+                        || !toolSnapshot.equals(openView.getTopInventory().getFirstItem())
+                        || !materialSnapshot.equals(openView.getTopInventory().getSecondItem())
+                        || !result.equals(openView.getTopInventory().getResult())) {
+                    return;
+                }
+                openView.setRepairCost(finalCost);
+                openView.setRepairItemCountCost(finalItemsUsed);
+            });
+        }
     }
 
     // ---- Crafting ----
